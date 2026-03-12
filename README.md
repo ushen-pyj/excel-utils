@@ -4,9 +4,11 @@ Excel toolbox built with Tauri 2, TypeScript, and Rust.
 
 ## Features
 
+- Open `.xlsx`, `.xlsm`, `.xls`, and `.csv` files
 - Data cleaning: deduplicate values, split columns, merge columns
 - Financial modeling: PMT, NPV, IRR
-- Quick print: printable report preview from pasted table data
+- Quick print: printable report preview from pasted or imported table data
+- Export processed data back to `.xlsx` or `.csv`
 
 ## Scripts
 
