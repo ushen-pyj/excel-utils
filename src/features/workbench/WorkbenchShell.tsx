@@ -1,13 +1,12 @@
 ﻿"use client";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
-  App as AntApp,
+  Badge,
   Button,
   Card,
   Col,
-  ConfigProvider,
   Flex,
   Layout,
   Menu,
@@ -15,9 +14,7 @@ import {
   Segmented,
   Space,
   Statistic,
-  Tag,
-  Typography,
-  theme as antdTheme
+  Typography
 } from "antd";
 import {
   BorderOutlined,
@@ -28,12 +25,12 @@ import {
   MinusOutlined
 } from "@ant-design/icons";
 import { navItems } from "./constants";
-import { StatusTone, ViewKey } from "../shared/types";
+import { ViewKey, WorkbookInfo } from "../shared/types";
 
 const { Sider, Content } = Layout;
 const { Paragraph, Text } = Typography;
 
-type ThemeMode = "default" | "dark" | "compact" | "dark-compact";
+export type ThemeMode = "default" | "dark" | "compact" | "dark-compact";
 
 function WindowControls() {
   const [isTauriWindow, setIsTauriWindow] = useState(false);
@@ -87,126 +84,134 @@ function WindowControls() {
   );
 }
 
-function statusTagColor(tone: StatusTone): "default" | "success" | "warning" | "error" | "processing" {
-  if (tone === "success") return "success";
-  if (tone === "warning") return "warning";
-  if (tone === "error") return "error";
-  return "processing";
-}
-
 export function WorkbenchShell({
   activeView,
   onNavigate,
-  status,
+  workbookInfo,
+  onOpenWorkbook,
   stats,
+  themeMode,
+  onThemeModeChange,
+  isDark,
   children
 }: {
   activeView: ViewKey;
   onNavigate: (key: ViewKey) => void;
-  status: { message: string; tone: StatusTone };
+  workbookInfo: WorkbookInfo | null;
+  onOpenWorkbook: () => Promise<void>;
   stats: Array<{ label: string; value: string }>;
+  themeMode: ThemeMode;
+  onThemeModeChange: (mode: ThemeMode) => void;
+  isDark: boolean;
   children: ReactNode;
 }) {
   const navMeta = navItems.find((item) => item.key === activeView) ?? navItems[0];
-  const [themeMode, setThemeMode] = useState<ThemeMode>("default");
   const [collapsed, setCollapsed] = useState(false);
-  const isDark = themeMode === "dark" || themeMode === "dark-compact";
-
-  const themeAlgorithm = useMemo(() => {
-    if (themeMode === "dark") return antdTheme.darkAlgorithm;
-    if (themeMode === "compact") return antdTheme.compactAlgorithm;
-    if (themeMode === "dark-compact") return [antdTheme.darkAlgorithm, antdTheme.compactAlgorithm];
-    return antdTheme.defaultAlgorithm;
-  }, [themeMode]);
 
   return (
-    <ConfigProvider theme={{ algorithm: themeAlgorithm }}>
-      <AntApp>
-        <Layout hasSider style={{ minHeight: "100vh" }}>
-          <Sider
-            width={232}
-            collapsible
-            collapsed={collapsed}
-            onCollapse={setCollapsed}
-            collapsedWidth={72}
-            trigger={null}
+    <Layout hasSider style={{ minHeight: "100vh" }}>
+      <Sider
+        width={232}
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        collapsedWidth={72}
+        trigger={null}
+        theme={isDark ? "dark" : "light"}
+      >
+        <Flex vertical gap="small" style={{ paddingBlock: 12 }}>
+          <Text strong style={{ paddingInline: 16, color: isDark ? "rgba(255,255,255,0.92)" : undefined }}>
+            {collapsed ? "Excel" : "Excel Utils"}
+          </Text>
+          <Menu
+            mode="inline"
             theme={isDark ? "dark" : "light"}
-          >
-            <Flex vertical gap="small">
-              <Card size="small" title={collapsed ? "Excel" : "Excel Utils"}>
-                {!collapsed ? <Tag color={statusTagColor(status.tone)}>{status.message}</Tag> : null}
-              </Card>
-              <Menu
-                mode="inline"
-                theme={isDark ? "dark" : "light"}
-                selectedKeys={[activeView]}
-                onSelect={({ key }) => onNavigate(key as ViewKey)}
-                items={navItems.map((item) => ({
-                  key: item.key,
-                  label: `${item.eyebrow} ${item.label}`
-                }))}
-              />
-            </Flex>
-          </Sider>
+            selectedKeys={[activeView]}
+            onSelect={({ key }) => onNavigate(key as ViewKey)}
+            items={navItems.map((item) => ({
+              key: item.key,
+              label: item.label
+            }))}
+          />
+        </Flex>
+      </Sider>
 
-          <Layout>
-            <Content style={{ overflow: "auto", height: "100vh" }}>
-              <Row gutter={[0, 16]}>
-                <Col span={24}>
-                  <Card>
-                    <Flex justify="space-between" align="center" data-tauri-drag-region>
-                      <Space data-tauri-drag-region>
-                        <Button
-                          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                          onClick={() => setCollapsed((prev) => !prev)}
-                        />
-                        <Text strong>{navMeta.label}</Text>
-                      </Space>
-                      <Space data-tauri-drag-region>
-                        <Segmented
-                          value={themeMode}
-                          onChange={(value) => setThemeMode(value as ThemeMode)}
-                          options={[
-                            { label: "默认", value: "default" },
-                            { label: "暗色", value: "dark" },
-                            { label: "紧凑", value: "compact" },
-                            { label: "暗色+紧凑", value: "dark-compact" }
-                          ]}
-                        />
-                        <WindowControls />
-                      </Space>
-                    </Flex>
-                  </Card>
-                </Col>
+      <Layout>
+        <Content style={{ overflow: "auto", height: "100vh" }}>
+          <Row gutter={[0, 16]}>
+            <Col span={24}>
+              <Card>
+                <div
+                  data-tauri-drag-region
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto 1fr",
+                    alignItems: "center",
+                    columnGap: 12
+                  }}
+                >
+                  <Space data-tauri-drag-region>
+                    <Button
+                      icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                      onClick={() => setCollapsed((prev) => !prev)}
+                    />
+                    <Text strong>{navMeta.label}</Text>
+                  </Space>
 
-                <Col span={24}>
-                  <Card title={navMeta.label}>
-                    <Paragraph type="secondary">{navMeta.desc}</Paragraph>
-                    <Row gutter={[12, 12]}>
-                      {stats.map((item) => (
-                        <Col key={item.label} xs={24} sm={12} lg={6}>
-                          <Card size="small">
-                            <Statistic title={item.label} value={item.value} />
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
-                  </Card>
-                </Col>
-
-                <Col span={24}>
-                  <Card>
-                    <Space orientation="vertical" size="middle">
-                      <Text type="secondary">当前模块内容</Text>
-                      {children}
+                  {workbookInfo ? (
+                    <Space>
+                      <Badge status="success" />
+                      <Text strong>{workbookInfo.fileName}</Text>
                     </Space>
-                  </Card>
-                </Col>
-              </Row>
-            </Content>
-          </Layout>
-        </Layout>
-      </AntApp>
-    </ConfigProvider>
+                  ) : (
+                    <Button type="primary" onClick={() => void onOpenWorkbook()}>
+                      打开工作簿
+                    </Button>
+                  )}
+
+                  <Space data-tauri-drag-region style={{ justifySelf: "end" }}>
+                    <Segmented
+                      value={themeMode}
+                      onChange={(value) => onThemeModeChange(value as ThemeMode)}
+                      options={[
+                        { label: "默认", value: "default" },
+                        { label: "暗色", value: "dark" },
+                        { label: "紧凑", value: "compact" },
+                        { label: "暗色+紧凑", value: "dark-compact" }
+                      ]}
+                    />
+                    <WindowControls />
+                  </Space>
+                </div>
+              </Card>
+            </Col>
+
+            <Col span={24}>
+              <Card title={navMeta.label}>
+                <Paragraph type="secondary">{navMeta.desc}</Paragraph>
+                <Row gutter={[12, 12]}>
+                  {stats.map((item) => (
+                    <Col key={item.label} xs={24} sm={12} lg={6}>
+                      <Card size="small">
+                        <Statistic title={item.label} value={item.value} />
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card>
+            </Col>
+
+            <Col span={24}>
+              <Card>
+                <Space orientation="vertical" size="middle">
+                  <Text type="secondary">当前模块内容</Text>
+                  {children}
+                </Space>
+              </Card>
+            </Col>
+          </Row>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }

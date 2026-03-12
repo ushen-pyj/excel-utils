@@ -104,6 +104,5 @@ export type MetricEntry = [string, string];
 export type NavItem = {
   key: ViewKey;
   label: string;
-  eyebrow: string;
   desc: string;
 };

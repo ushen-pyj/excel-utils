@@ -1,4 +1,5 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
+import { WorkbenchRoot } from "../features/workbench/WorkbenchRoot";
 import "antd/dist/reset.css";
 import "./globals.css";
 
@@ -14,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <WorkbenchRoot>{children}</WorkbenchRoot>
+      </body>
     </html>
   );
 }
