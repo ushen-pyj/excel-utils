@@ -126,7 +126,7 @@ export function SelectField({ label, value, onChange, options }: { label: string
   );
 }
 
-export function DashboardView({ dashboardCards, onNavigate, onOpenWorkbook, onRefreshPreview, currentTable, financeResult, batchResult, isOpenWorkbookPending, isRefreshPreviewPending }: { dashboardCards: Array<{ key: ViewKey; title: string; desc: string; metric: string }>; onNavigate: (key: ViewKey) => void; onOpenWorkbook: () => void; onRefreshPreview: () => Promise<void>; currentTable: CleanResult | null; financeResult: CleanResult | null; batchResult: { processed: number } | null; isOpenWorkbookPending: boolean; isRefreshPreviewPending: boolean; }) {
+export function DashboardView({ dashboardCards, onNavigate, onRefreshPreview, currentTable, financeResult, batchResult, isRefreshPreviewPending }: { dashboardCards: Array<{ key: ViewKey; title: string; desc: string; metric: string }>; onNavigate: (key: ViewKey) => void; onRefreshPreview: () => Promise<void>; currentTable: CleanResult | null; financeResult: CleanResult | null; batchResult: { processed: number } | null; isRefreshPreviewPending: boolean; }) {
   return (
     <Space orientation="vertical" size="middle">
       <Card
@@ -134,7 +134,6 @@ export function DashboardView({ dashboardCards, onNavigate, onOpenWorkbook, onRe
         extra={(
           <Space>
             <Button loading={isRefreshPreviewPending} onClick={() => void onRefreshPreview()}>{COPY.actions.refreshPreview}</Button>
-            <Button type="primary" loading={isOpenWorkbookPending} onClick={onOpenWorkbook}>{COPY.actions.importWorkbook}</Button>
           </Space>
         )}
       >
@@ -159,6 +158,7 @@ export function DashboardView({ dashboardCards, onNavigate, onOpenWorkbook, onRe
     </Space>
   );
 }
+
 
 
 

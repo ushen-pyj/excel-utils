@@ -15,7 +15,6 @@ export function WorkbookSection({ workbench }: { workbench: ReturnType<typeof us
         <Col xs={24} xl={14}>
           <Panel title="工作簿导入台" subtitle="连接本地 Excel / CSV，管理文件信息与工作表入口。">
             <Space wrap>
-              <Button loading={workbench.isPending("openWorkbook")} onClick={workbench.openWorkbook}>{COPY.actions.importWorkbook}</Button>
               <Button
                 type="primary"
                 loading={workbench.isPending("loadSheet")}
