@@ -1,22 +1,9 @@
 :root {
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   color: #102033;
-  background:
-    radial-gradient(circle at top left, rgba(255, 208, 122, 0.45), transparent 28%),
-    radial-gradient(circle at right 15%, rgba(85, 160, 255, 0.28), transparent 30%),
-    linear-gradient(135deg, #f5f1e8 0%, #f7fbff 48%, #eef4f8 100%);
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.92);
-  --border: rgba(16, 32, 51, 0.12);
-  --accent: #0f766e;
-  --ink-soft: #5b6978;
-  --shadow: 0 22px 50px rgba(28, 46, 74, 0.12);
+  background: radial-gradient(circle at top left, rgba(255, 208, 122, 0.45), transparent 28%), radial-gradient(circle at right 15%, rgba(85, 160, 255, 0.28), transparent 30%), linear-gradient(135deg, #f5f1e8 0%, #f7fbff 48%, #eef4f8 100%);
+  line-height: 1.5; font-weight: 400; color-scheme: light; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
+  --surface: rgba(255,255,255,0.74); --surface-strong: rgba(255,255,255,0.92); --border: rgba(16,32,51,0.12); --accent: #0f766e; --ink-soft: #5b6978; --shadow: 0 22px 50px rgba(28,46,74,0.12);
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; }
@@ -45,10 +32,12 @@ h3 { font-size: 18px; }
 .field input, .field textarea, .field select { width: 100%; padding: 13px 14px; border-radius: 16px; border: 1px solid rgba(16,32,51,0.12); background: var(--surface-strong); color: #102033; }
 .field textarea { resize: vertical; }
 .field-row, .file-toolbar { display: flex; gap: 16px; align-items: end; margin: 16px 0 20px; flex-wrap: wrap; }
+.compact-toolbar { margin: 0; }
 .file-toolbar { margin-top: 0; }
-.file-grid, .tool-grid, .finance-grid { display: grid; gap: 16px; }
-.file-grid { grid-template-columns: 1.4fr 1fr; }
-.tool-grid, .finance-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.file-grid, .finance-grid, .batch-grid { display: grid; gap: 16px; }
+.file-grid, .batch-grid { grid-template-columns: 1.4fr 1fr; }
+.cleaning-grid { display: grid; gap: 16px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.finance-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grow { flex: 1; }
 .tool-box, .print-preview, .metric-card, .table-wrap { background: rgba(255,255,255,0.7); border: 1px solid rgba(16,32,51,0.08); border-radius: 22px; }
 .tool-box { padding: 18px; display: grid; gap: 12px; }
@@ -77,5 +66,6 @@ th { background: rgba(15,118,110,0.08); }
 .print-preview { min-height: 220px; padding: 20px; }
 .print-preview.empty { display: grid; place-items: center; color: var(--ink-soft); }
 .print-sheet-head { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 14px; }
-@media (max-width: 1100px) { .shell { grid-template-columns: 1fr; } .hero { position: static; } .file-grid, .tool-grid, .finance-grid, .merge-picker { grid-template-columns: 1fr; } }
+@media (max-width: 1300px) { .cleaning-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1100px) { .shell { grid-template-columns: 1fr; } .hero { position: static; } .file-grid, .batch-grid, .cleaning-grid, .finance-grid, .merge-picker { grid-template-columns: 1fr; } }
 @media print { body { background: white; } .hero, .panel:not(:last-child), #print-preview-btn, #print-btn { display: none !important; } .shell, .workspace, .panel { display: block; padding: 0; box-shadow: none; border: 0; background: white; } .print-preview { border: 0; padding: 0; background: white; } }
