@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   color: #102033;
   background: radial-gradient(circle at top left, rgba(255, 208, 122, 0.45), transparent 28%), radial-gradient(circle at right 15%, rgba(85, 160, 255, 0.28), transparent 30%), linear-gradient(135deg, #f5f1e8 0%, #f7fbff 48%, #eef4f8 100%);
@@ -48,6 +48,16 @@ h3 { font-size: 18px; }
 .action { background: var(--accent); color: white; }
 .ghost { background: rgba(16,32,51,0.06); color: #102033; }
 .action:hover, .ghost:hover { transform: translateY(-1px); }
+button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+.inline-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.chain-list { display: grid; gap: 10px; }
+.chain-list.empty { display: grid; place-items: center; min-height: 88px; color: var(--ink-soft); background: rgba(16,32,51,0.04); border-radius: 16px; padding: 12px; }
+.chain-toolbar, .chain-item, .chain-item-actions { display: flex; align-items: center; }
+.chain-toolbar, .chain-item { justify-content: space-between; gap: 12px; }
+.chain-item { padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(16,32,51,0.08); background: rgba(255,255,255,0.76); }
+.chain-item p { margin-top: 4px; color: var(--ink-soft); font-size: 13px; }
+.chain-item-actions { gap: 8px; flex-wrap: wrap; }
+.chain-item-actions .ghost, .chain-toolbar .ghost { padding: 8px 12px; }
 .result-block { margin-top: 18px; }
 .result-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 16px; }
 .summary-list { margin: 0 0 14px; padding-left: 20px; color: var(--ink-soft); }

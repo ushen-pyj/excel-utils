@@ -1,4 +1,4 @@
-use calamine::{open_workbook_auto, Reader};
+﻿use calamine::{open_workbook_auto, Reader};
 use csv::{ReaderBuilder, WriterBuilder};
 use rust_xlsxwriter::Workbook;
 use serde::{Deserialize, Serialize};
@@ -165,16 +165,17 @@ fn export_table(path: String, format: String, sheet_name: String, columns: Vec<S
 }
 
 #[tauri::command]
-fn batch_apply_column_rule(paths: Vec<String>, output_dir: String, column_name: String, rule: BatchRule, has_header: bool) -> Result<BatchProcessResult, String> {
+fn batch_apply_column_rule(paths: Vec<String>, output_dir: String, column_name: String, rules: Vec<BatchRule>, has_header: bool) -> Result<BatchProcessResult, String> {
     if paths.is_empty() { return Err("Please provide at least one input file".to_string()); }
     if column_name.trim().is_empty() { return Err("Column name is required for batch processing".to_string()); }
+    if rules.is_empty() { return Err("Please configure at least one batch rule".to_string()); }
 
     let mut results = Vec::new();
     let mut processed = 0;
     let mut failed = 0;
 
     for path in paths {
-        match batch_process_single_file(&path, &output_dir, &column_name, &rule, has_header) {
+        match batch_process_single_file(&path, &output_dir, &column_name, &rules, has_header) {
             Ok(result) => {
                 processed += 1;
                 results.push(result);
@@ -339,44 +340,65 @@ struct ParsedTable { columns: Vec<String>, rows: Vec<Vec<String>> }
 
 struct SourceTable { path: String, kind: String, active_sheet: String, rows: Vec<Vec<String>>, sheets: Vec<WorkbookSheet> }
 
-fn batch_process_single_file(path: &str, output_dir: &str, column_name: &str, rule: &BatchRule, has_header: bool) -> Result<BatchFileResult, String> {
+fn batch_process_single_file(path: &str, output_dir: &str, column_name: &str, rules: &[BatchRule], has_header: bool) -> Result<BatchFileResult, String> {
     let source = read_source(path, None)?;
     let parsed = rows_to_table(source.rows, has_header)?;
     let column_index = parsed.columns.iter().position(|column| column == column_name).ok_or_else(|| format!("Column '{}' not found", column_name))?;
-    let transformed = apply_rule_to_table(parsed, column_index, rule)?;
+    let transformed = apply_rule_chain_to_table(parsed, column_index, rules)?;
     let input_path = Path::new(path);
     let stem = input_path.file_stem().and_then(|value| value.to_str()).unwrap_or("output");
     let extension = if source.kind == "csv" { "csv" } else { "xlsx" };
     let output_path = PathBuf::from(output_dir).join(format!("{}-cleaned.{}", stem, extension));
     let output_string = output_path.to_string_lossy().to_string();
     export_table(output_string.clone(), extension.to_string(), source.active_sheet.clone(), transformed.columns.clone(), transformed.rows.clone())?;
-    Ok(BatchFileResult { input_path: path.to_string(), output_path: output_string, format: extension.to_string(), row_count: transformed.rows.len(), status: "processed".to_string(), message: format!("Applied {} to column {}", rule.rule_type, column_name) })
+    let chain_label = rules.iter().map(describe_batch_rule).collect::<Vec<_>>().join(" -> ");
+    Ok(BatchFileResult { input_path: path.to_string(), output_path: output_string, format: extension.to_string(), row_count: transformed.rows.len(), status: "processed".to_string(), message: format!("Applied {} to column {}", chain_label, column_name) })
 }
 
-fn apply_rule_to_table(table: ParsedTable, column_index: usize, rule: &BatchRule) -> Result<CleanResult, String> {
-    let summary = match rule.rule_type.as_str() {
-        "trim" => vec![format!("Trimmed whitespace in column {}", table.columns[column_index])],
-        "uppercase" | "lowercase" => vec![format!("Applied {} to column {}", rule.rule_type, table.columns[column_index])],
-        "fill-empty" => vec![format!("Filled empty cells in column {}", table.columns[column_index]), format!("Fill value: {}", rule.fill_value)],
-        "format-number" => vec![format!("Formatted numeric values in column {}", table.columns[column_index]), format!("Decimals: {}", rule.decimals)],
-        _ => return Err("Unsupported batch rule".to_string()),
-    };
-
+fn apply_rule_chain_to_table(mut table: ParsedTable, column_index: usize, rules: &[BatchRule]) -> Result<CleanResult, String> {
+    ensure_column_index(&table, column_index)?;
+    if rules.is_empty() { return Err("Unsupported batch rule".to_string()); }
     let column_name = table.columns[column_index].clone();
-    let rows = table.rows.into_iter().map(|mut row| {
-        if let Some(cell) = row.get_mut(column_index) {
-            *cell = match rule.rule_type.as_str() {
-                "trim" => cell.trim().to_string(),
-                "uppercase" => cell.to_uppercase(),
-                "lowercase" => cell.to_lowercase(),
-                "fill-empty" => if cell.trim().is_empty() { rule.fill_value.clone() } else { cell.clone() },
-                "format-number" => format_number_cell(cell, rule.decimals),
-                _ => cell.clone(),
-            };
-        }
-        row
-    }).collect::<Vec<_>>();
-    Ok(build_clean_result(table.columns, rows, vec![summary.join(" | "), format!("Matched column: {}", column_name)]))
+    let mut summary = vec![format!("Matched column: {}", column_name.clone())];
+    for rule in rules {
+        summary.extend(rule_summary(&column_name, rule)?);
+        table.rows = table.rows.into_iter().map(|mut row| {
+            if let Some(cell) = row.get_mut(column_index) {
+                *cell = apply_rule_to_cell(cell, rule);
+            }
+            row
+        }).collect::<Vec<_>>();
+    }
+    Ok(build_clean_result(table.columns, table.rows, summary))
+}
+
+fn rule_summary(column_name: &str, rule: &BatchRule) -> Result<Vec<String>, String> {
+    match rule.rule_type.as_str() {
+        "trim" => Ok(vec![format!("Trimmed whitespace in column {}", column_name)]),
+        "uppercase" | "lowercase" => Ok(vec![format!("Applied {} to column {}", rule.rule_type, column_name)]),
+        "fill-empty" => Ok(vec![format!("Filled empty cells in column {}", column_name), format!("Fill value: {}", rule.fill_value)]),
+        "format-number" => Ok(vec![format!("Formatted numeric values in column {}", column_name), format!("Decimals: {}", rule.decimals)]),
+        _ => Err("Unsupported batch rule".to_string()),
+    }
+}
+
+fn apply_rule_to_cell(cell: &str, rule: &BatchRule) -> String {
+    match rule.rule_type.as_str() {
+        "trim" => cell.trim().to_string(),
+        "uppercase" => cell.to_uppercase(),
+        "lowercase" => cell.to_lowercase(),
+        "fill-empty" => if cell.trim().is_empty() { rule.fill_value.clone() } else { cell.to_string() },
+        "format-number" => format_number_cell(cell, rule.decimals),
+        _ => cell.to_string(),
+    }
+}
+
+fn describe_batch_rule(rule: &BatchRule) -> String {
+    match rule.rule_type.as_str() {
+        "fill-empty" => format!("fill-empty({})", rule.fill_value),
+        "format-number" => format!("format-number({})", rule.decimals),
+        _ => rule.rule_type.clone(),
+    }
 }
 
 fn read_source(path: &str, selected_sheet: Option<&str>) -> Result<SourceTable, String> {

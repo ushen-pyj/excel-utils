@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+﻿import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import "./styles.css";
 
@@ -82,6 +82,10 @@ type BatchRule = {
   decimals: number;
 };
 
+type RuleChainItem = BatchRule & {
+  id: string;
+};
+
 type BatchFileResult = {
   inputPath: string;
   outputPath: string;
@@ -162,7 +166,12 @@ app.innerHTML = `
             <label class="field"><span>规则类型</span><select id="rule-type"><option value="trim">去首尾空格</option><option value="uppercase">转大写</option><option value="lowercase">转小写</option><option value="fill-empty">空值填充</option><option value="format-number">数值格式化</option></select></label>
             <label class="field"><span>填充值</span><input id="rule-fill" type="text" value="N/A" /></label>
             <label class="field"><span>保留小数位</span><input id="rule-decimals" type="number" min="0" value="2" /></label>
-            <button id="rule-btn" class="action">应用列规则</button>
+            <div class="inline-actions">
+              <button id="rule-add-btn" class="ghost">加入规则链</button>
+              <button id="rule-btn" class="action">应用当前规则</button>
+              <button id="rule-chain-btn" class="ghost">应用规则链</button>
+            </div>
+            <div id="rule-chain-list" class="chain-list empty">尚未添加规则，批处理会退回为当前规则</div>
           </div>
           <div class="tool-box">
             <h3>重复值处理</h3>
@@ -210,7 +219,7 @@ app.innerHTML = `
           <div class="tool-box compact">
             <h3>批量规则</h3>
             <div id="batch-rule-preview" class="meta-grid"></div>
-            <p class="muted">批量处理默认使用每个文件的首个工作表，并按当前“列规则”配置匹配同名列。</p>
+            <p class="muted">批量处理默认使用每个文件的首个工作表，并按当前目标列把规则链从上到下依次执行。</p>
           </div>
         </div>
         <div class="result-block">
@@ -295,6 +304,7 @@ const batchFilesEl = must<HTMLUListElement>("#batch-files");
 const batchRulePreviewEl = must<HTMLDivElement>("#batch-rule-preview");
 const batchSummaryEl = must<HTMLUListElement>("#batch-summary");
 const batchResultsEl = must<HTMLDivElement>("#batch-results");
+const ruleChainListEl = must<HTMLDivElement>("#rule-chain-list");
 
 let latestCsv = "";
 let currentTable: CleanResult | null = null;
@@ -303,6 +313,7 @@ let workbookInfo: WorkbookInfo | null = null;
 let syncedSignature = "";
 let batchFiles: string[] = [];
 let batchOutputDir = "";
+let ruleChain: RuleChainItem[] = [];
 
 bindEvents();
 refreshColumnControls();
@@ -312,7 +323,9 @@ function bindEvents(): void {
   must<HTMLButtonElement>("#open-workbook-btn").addEventListener("click", openWorkbook);
   must<HTMLButtonElement>("#load-sheet-btn").addEventListener("click", loadSheet);
   must<HTMLButtonElement>("#refresh-preview-btn").addEventListener("click", refreshPreview);
+  must<HTMLButtonElement>("#rule-add-btn").addEventListener("click", addRuleToChain);
   must<HTMLButtonElement>("#rule-btn").addEventListener("click", applyColumnRule);
+  must<HTMLButtonElement>("#rule-chain-btn").addEventListener("click", applyRuleChain);
   must<HTMLSelectElement>("#rule-type").addEventListener("change", refreshBatchRulePreview);
   must<HTMLInputElement>("#rule-fill").addEventListener("input", refreshBatchRulePreview);
   must<HTMLInputElement>("#rule-decimals").addEventListener("input", refreshBatchRulePreview);
@@ -341,13 +354,33 @@ async function refreshPreview(): Promise<void> { try { const result = await prev
 
 async function applyColumnRule(): Promise<void> {
   try {
-    const result = await invokeRule(baseTableInput(), Number(ruleSelect.value));
+    const result = await invokeRule(baseTableInput(), Number(ruleSelect.value), currentBatchRule());
     renderCleanResult(result, true);
     refreshBatchRulePreview();
     setStatus("列规则已应用", "success");
   } catch (error) {
     handleError(error);
   }
+}
+
+async function applyRuleChain(): Promise<void> {
+  try {
+    const rules = effectiveBatchRules();
+    const result = await invokeRuleChain(baseTableInput(), Number(ruleSelect.value), rules);
+    renderCleanResult(result, true);
+    refreshBatchRulePreview();
+    setStatus(`规则链已应用，共 ${rules.length} 步`, "success");
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+function addRuleToChain(): void {
+  const rule = currentBatchRule();
+  ruleChain = [...ruleChain, { ...rule, id: crypto.randomUUID() }];
+  renderRuleChainList();
+  refreshBatchRulePreview();
+  setStatus(`已加入规则链：${describeRule(rule)}`, "success");
 }
 
 async function pickBatchFiles(): Promise<void> {
@@ -393,7 +426,7 @@ async function runBatch(): Promise<void> {
       paths: batchFiles,
       outputDir: batchOutputDir,
       columnName,
-      rule: currentBatchRule(),
+      rules: effectiveBatchRules(),
       hasHeader: must<HTMLInputElement>("#table-header").checked
     });
     renderBatchResult(result);
@@ -436,8 +469,10 @@ function refreshColumnControls(): void {
 
 function refreshBatchRulePreview(): void {
   const columnName = selectedRuleColumnName() || "尚未确定列名";
-  const rule = currentBatchRule();
-  batchRulePreviewEl.innerHTML = `<div><span>目标列</span><strong>${escapeHtml(columnName)}</strong></div><div><span>规则</span><strong>${escapeHtml(rule.ruleType)}</strong></div><div><span>填充值</span><strong>${escapeHtml(rule.fillValue)}</strong></div><div><span>小数位</span><strong>${rule.decimals}</strong></div>`;
+  const rules = effectiveBatchRules();
+  const chainLabel = rules.map(describeRule).join(" -> ");
+  batchRulePreviewEl.innerHTML = `<div><span>目标列</span><strong>${escapeHtml(columnName)}</strong></div><div><span>规则步数</span><strong>${rules.length}</strong></div><div><span>执行顺序</span><strong>${escapeHtml(chainLabel)}</strong></div>`;
+  renderRuleChainList();
 }
 
 function selectedRuleColumnName(): string {
@@ -451,12 +486,70 @@ function currentBatchRule(): BatchRule {
   return { ruleType: must<HTMLSelectElement>("#rule-type").value, fillValue: must<HTMLInputElement>("#rule-fill").value, decimals: Number(must<HTMLInputElement>("#rule-decimals").value) };
 }
 
-async function invokeRule(input: TableInput, columnIndex: number): Promise<CleanResult> {
-  const ruleType = must<HTMLSelectElement>("#rule-type").value;
+async function invokeRule(input: TableInput, columnIndex: number, rule: BatchRule): Promise<CleanResult> {
+  const ruleType = rule.ruleType;
   if (ruleType === "trim") return invoke<CleanResult>("trim_cells", { input, columnIndex });
   if (ruleType === "uppercase" || ruleType === "lowercase") return invoke<CleanResult>("change_case", { input, columnIndex, mode: ruleType });
-  if (ruleType === "fill-empty") return invoke<CleanResult>("fill_empty_cells", { input, columnIndex, fillValue: must<HTMLInputElement>("#rule-fill").value });
-  return invoke<CleanResult>("format_numeric_column", { input, columnIndex, decimals: Number(must<HTMLInputElement>("#rule-decimals").value) });
+  if (ruleType === "fill-empty") return invoke<CleanResult>("fill_empty_cells", { input, columnIndex, fillValue: rule.fillValue });
+  return invoke<CleanResult>("format_numeric_column", { input, columnIndex, decimals: rule.decimals });
+}
+
+async function invokeRuleChain(input: TableInput, columnIndex: number, rules: BatchRule[]): Promise<CleanResult> {
+  let currentInput = input;
+  let lastResult: CleanResult | null = null;
+  for (const rule of rules) {
+    lastResult = await invokeRule(currentInput, columnIndex, rule);
+    currentInput = { raw: tableToText(lastResult.columns, lastResult.rows), delimiter: "\t", hasHeader: true };
+  }
+  if (!lastResult) throw new Error("请先配置至少一个规则");
+  const chainSummary = rules.map((rule, index) => `${index + 1}. ${describeRule(rule)}`);
+  return { ...lastResult, summary: [`规则链已执行 ${rules.length} 步`, ...chainSummary, ...lastResult.summary] };
+}
+
+function effectiveBatchRules(): BatchRule[] {
+  return ruleChain.length > 0 ? ruleChain.map(({ id: _id, ...rule }) => rule) : [currentBatchRule()];
+}
+
+function renderRuleChainList(): void {
+  if (ruleChain.length === 0) {
+    ruleChainListEl.className = "chain-list empty";
+    ruleChainListEl.innerHTML = "尚未添加规则，批处理会退回为当前规则";
+    return;
+  }
+  ruleChainListEl.className = "chain-list";
+  ruleChainListEl.innerHTML = `<div class="chain-toolbar"><span>已配置 ${ruleChain.length} 步</span><button type="button" class="ghost" data-chain-action="clear">清空</button></div>${ruleChain.map((rule, index) => `<div class="chain-item"><div><strong>${index + 1}. ${escapeHtml(rule.ruleType)}</strong><p>${escapeHtml(describeRule(rule))}</p></div><div class="chain-item-actions"><button type="button" class="ghost" data-chain-action="up" data-chain-id="${rule.id}" ${index === 0 ? "disabled" : ""}>上移</button><button type="button" class="ghost" data-chain-action="down" data-chain-id="${rule.id}" ${index === ruleChain.length - 1 ? "disabled" : ""}>下移</button><button type="button" class="ghost" data-chain-action="remove" data-chain-id="${rule.id}">删除</button></div></div>`).join("")}`;
+  Array.from(ruleChainListEl.querySelectorAll<HTMLButtonElement>("button[data-chain-action]")).forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.chainAction;
+      const id = button.dataset.chainId ?? "";
+      if (action === "clear") {
+        ruleChain = [];
+      } else if (action === "remove") {
+        ruleChain = ruleChain.filter((item) => item.id !== id);
+      } else if (action === "up") {
+        moveRuleChainItem(id, -1);
+      } else if (action === "down") {
+        moveRuleChainItem(id, 1);
+      }
+      renderRuleChainList();
+      refreshBatchRulePreview();
+    });
+  });
+}
+
+function moveRuleChainItem(id: string, offset: -1 | 1): void {
+  const index = ruleChain.findIndex((item) => item.id === id);
+  const targetIndex = index + offset;
+  if (index < 0 || targetIndex < 0 || targetIndex >= ruleChain.length) return;
+  const next = [...ruleChain];
+  [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+  ruleChain = next;
+}
+
+function describeRule(rule: BatchRule): string {
+  if (rule.ruleType === "fill-empty") return `fill-empty (${rule.fillValue || "空字符串"})`;
+  if (rule.ruleType === "format-number") return `format-number (${rule.decimals} 位小数)`;
+  return rule.ruleType;
 }
 
 function inferredTableFromTextarea(): CleanResult | null {
