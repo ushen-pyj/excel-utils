@@ -1,12 +1,12 @@
 ﻿# Excel Utils
 
-Excel toolbox built with Tauri 2, TypeScript, and Rust.
+Excel toolbox built with Tauri 2, Next.js, Tailwind CSS, TypeScript, and Rust.
 
 ## Quick Start
 
-- `npm run dev`: start the Vite frontend
+- `npm run dev`: start the Next.js frontend on `http://127.0.0.1:1420`
 - `npm run tauri dev`: start the Tauri desktop app
-- `npm run build`: build the frontend assets
+- `npm run build`: build the static frontend assets for Tauri
 - `npm run tauri build`: build the desktop app
 
 ## Documentation
@@ -16,6 +16,6 @@ Excel toolbox built with Tauri 2, TypeScript, and Rust.
 
 ## Source Map
 
-- Frontend UI and event wiring: `src/main.ts`
+- Frontend UI and event wiring: `src/app/page.tsx`
 - Rust command layer and business logic: `src-tauri/src/lib.rs`
 - Rust tests: `src-tauri/src/tests/`
