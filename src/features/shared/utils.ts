@@ -1,15 +1,4 @@
-import { BatchRule, CleanResult, LoanRequest, MetricEntry, NpvRequest, IrrRequest, StatusTone } from "./types";
-
-export const actionButton =
-  "inline-flex items-center justify-center rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/70 disabled:cursor-not-allowed disabled:opacity-50";
-
-export const ghostButton =
-  "inline-flex items-center justify-center rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-slate-100 transition hover:-translate-y-0.5 hover:border-amber-300/40 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50";
-
-export const inputClass =
-  "field-surface w-full rounded-2xl px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-400 focus:border-amber-300/60 focus:bg-white/10";
-
-export const cardClass = "glass-panel rounded-[28px] border border-white/10";
+﻿import { BatchRule, CleanResult, LoanRequest, MetricEntry, NpvRequest, IrrRequest } from "./types";
 
 export function columnOptions(columns: string[]): Array<{ value: string; label: string }> {
   if (columns.length === 0) return [{ value: "0", label: "等待数据" }];
@@ -50,19 +39,34 @@ export function describeRule(rule: BatchRule): string {
 }
 
 export function loanRequest(principal: string, rate: string, years: string, payments: string): LoanRequest {
-  return { principal: Number(principal), annualRatePct: Number(rate), years: Number(years), paymentsPerYear: Number(payments) };
+  return {
+    principal: Number(principal),
+    annualRatePct: Number(rate),
+    years: Number(years),
+    paymentsPerYear: Number(payments)
+  };
 }
 
 export function npvRequest(rate: string, initialInvestment: string, cashFlows: string): NpvRequest {
-  return { ratePct: Number(rate), initialInvestment: Number(initialInvestment), cashFlows: parseNumberList(cashFlows) };
+  return {
+    ratePct: Number(rate),
+    initialInvestment: Number(initialInvestment),
+    cashFlows: parseNumberList(cashFlows)
+  };
 }
 
 export function irrRequest(cashFlows: string, guess: string): IrrRequest {
-  return { cashFlows: parseNumberList(cashFlows), guessPct: Number(guess) };
+  return {
+    cashFlows: parseNumberList(cashFlows),
+    guessPct: Number(guess)
+  };
 }
 
 export function parseNumberList(input: string): number[] {
-  return input.split(",").map((item) => Number(item.trim())).filter((item) => !Number.isNaN(item));
+  return input
+    .split(",")
+    .map((item) => Number(item.trim()))
+    .filter((item) => !Number.isNaN(item));
 }
 
 export function tableToText(columns: string[], rows: string[][]): string {
@@ -70,7 +74,11 @@ export function tableToText(columns: string[], rows: string[][]): string {
 }
 
 export function currency(value: number): string {
-  return new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY", maximumFractionDigits: 2 }).format(value);
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
+    maximumFractionDigits: 2
+  }).format(value);
 }
 
 export function signatureFor(raw: string, delimiter: string, hasHeader: boolean): string {
@@ -80,13 +88,6 @@ export function signatureFor(raw: string, delimiter: string, hasHeader: boolean)
 export function selectedSheetName(sheetName: string): string {
   const base = sheetName || "CleanedData";
   return base.slice(0, 31) || "CleanedData";
-}
-
-export function statusToneClass(tone: StatusTone): string {
-  if (tone === "success") return "text-emerald-300";
-  if (tone === "warning") return "text-amber-200";
-  if (tone === "error") return "text-rose-300";
-  return "text-slate-200";
 }
 
 export function metricEntries(entries: MetricEntry[]): MetricEntry[] {

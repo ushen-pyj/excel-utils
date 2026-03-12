@@ -1,6 +1,81 @@
-import { InfoCard, Panel, actionButton, ghostButton, inputClass, EmptyState } from "../../components/ui";
+﻿import { Button, Card, Col, Empty, InputNumber, Row, Select, Space, Typography } from "antd";
+import { InfoCard, Panel } from "../../components/ui";
 import { useExcelWorkbench } from "../workbench/useExcelWorkbench";
 
+const { Text } = Typography;
+
 export function WorkbookSection({ workbench }: { workbench: ReturnType<typeof useExcelWorkbench> }) {
-  return <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]"><Panel title="工作簿导入台" subtitle="连接本地 Excel / CSV，管理文件信息与工作表入口。"><div className="flex flex-wrap gap-3"><button type="button" className={actionButton} onClick={workbench.openWorkbook}>打开工作簿</button><button type="button" className={ghostButton} onClick={() => void workbench.loadSheet()}>载入当前工作表</button><button type="button" className={ghostButton} onClick={() => void workbench.exportCurrentTable("xlsx")}>导出 XLSX</button><button type="button" className={ghostButton} onClick={() => void workbench.exportCurrentTable("csv")}>导出 CSV</button></div><div className="grid gap-4 lg:grid-cols-2"><InfoCard label="文件路径" value={workbench.workbookInfo?.path ?? "尚未选择文件"} /><InfoCard label="文件概况" value={workbench.workbookInfo ? `${workbench.workbookInfo.kind.toUpperCase()} · ${workbench.workbookInfo.sheets.length} 个工作表` : "等待导入"} /></div><div className="grid gap-4 lg:grid-cols-[1fr_180px]"><label className="grid gap-2"><span className="text-sm font-medium text-slate-200">工作表</span><select className={inputClass} value={workbench.selectedSheet} onChange={(event) => workbench.setSelectedSheet(event.target.value)}>{workbench.workbookInfo?.sheets.length ? workbench.workbookInfo.sheets.map((sheet) => <option key={sheet.name} value={sheet.name}>{sheet.name} ({sheet.rowCount} 行 / {sheet.columnCount} 列)</option>) : <option value="">等待文件</option>}</select></label><label className="grid gap-2"><span className="text-sm font-medium text-slate-200">预览行数</span><input className={inputClass} type="number" min="5" value={workbench.sheetLimit} onChange={(event) => workbench.setSheetLimit(event.target.value)} /></label></div></Panel><Panel title="工作表清单" subtitle="快速确认文件结构，再跳去数据清洗区继续处理。"><div className="grid gap-3">{workbench.workbookInfo?.sheets.length ? workbench.workbookInfo.sheets.map((sheet) => <button key={sheet.name} type="button" onClick={() => { workbench.setSelectedSheet(sheet.name); workbench.setActiveView("workbook"); }} className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-left transition hover:border-amber-300/30 hover:bg-white/[0.06]"><div className="flex items-center justify-between gap-3"><span className="text-base font-semibold text-white">{sheet.name}</span><span className="rounded-full bg-white/8 px-3 py-1 text-xs text-slate-300">{sheet.rowCount} 行</span></div><p className="mt-2 text-sm text-slate-400">{sheet.columnCount} 列</p></button>) : <EmptyState text="导入工作簿后，这里会列出所有工作表。" />}</div></Panel></div>;
+  return (
+    <Space orientation="vertical" size="middle">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={14}>
+          <Panel title="工作簿导入台" subtitle="连接本地 Excel / CSV，管理文件信息与工作表入口。">
+            <Space wrap>
+              <Button type="primary" onClick={workbench.openWorkbook}>打开工作簿</Button>
+              <Button onClick={() => void workbench.loadSheet()}>载入当前工作表</Button>
+              <Button onClick={() => void workbench.exportCurrentTable("xlsx")}>导出 XLSX</Button>
+              <Button onClick={() => void workbench.exportCurrentTable("csv")}>导出 CSV</Button>
+            </Space>
+            <Row gutter={[12, 12]}>
+              <Col xs={24} md={12}>
+                <InfoCard label="文件路径" value={workbench.workbookInfo?.path ?? "尚未选择文件"} />
+              </Col>
+              <Col xs={24} md={12}>
+                <InfoCard
+                  label="文件概况"
+                  value={workbench.workbookInfo ? `${workbench.workbookInfo.kind.toUpperCase()} · ${workbench.workbookInfo.sheets.length} 个工作表` : "等待导入"}
+                />
+              </Col>
+            </Row>
+            <Row gutter={[12, 12]}>
+              <Col xs={24} md={16}>
+                <Text>工作表</Text>
+                <Select
+                  value={workbench.selectedSheet}
+                  onChange={workbench.setSelectedSheet}
+                  options={workbench.workbookInfo?.sheets.length
+                    ? workbench.workbookInfo.sheets.map((sheet) => ({
+                        value: sheet.name,
+                        label: `${sheet.name} (${sheet.rowCount} 行 / ${sheet.columnCount} 列)`
+                      }))
+                    : [{ value: "", label: "等待文件" }]}
+                />
+              </Col>
+              <Col xs={24} md={8}>
+                <Text>预览行数</Text>
+                <InputNumber min={5} value={Number(workbench.sheetLimit)} onChange={(value) => workbench.setSheetLimit(String(value ?? 200))} />
+              </Col>
+            </Row>
+          </Panel>
+        </Col>
+        <Col xs={24} xl={10}>
+          <Panel title="工作表清单" subtitle="快速确认文件结构，进入数据清洗流程。">
+            <Space orientation="vertical" size="small">
+              {workbench.workbookInfo?.sheets.length ? (
+                workbench.workbookInfo.sheets.map((sheet) => (
+                  <Card key={sheet.name} size="small" title={sheet.name} extra={<Text type="secondary">{sheet.rowCount} 行</Text>}>
+                    <Space>
+                      <Text type="secondary">{sheet.columnCount} 列</Text>
+                      <Button
+                        type="link"
+                        onClick={() => {
+                          workbench.setSelectedSheet(sheet.name);
+                          workbench.setActiveView("workbook");
+                        }}
+                      >
+                        选择
+                      </Button>
+                    </Space>
+                  </Card>
+                ))
+              ) : (
+                <Empty description="导入工作簿后，这里会列出所有工作表。" />
+              )}
+            </Space>
+          </Panel>
+        </Col>
+      </Row>
+    </Space>
+  );
 }
+
