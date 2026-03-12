@@ -1,189 +1,179 @@
-﻿import { Button, Card, Checkbox, Col, Form, Input, Row, Select, Space, Typography } from "antd";
+﻿import { Button, Card, Checkbox, Collapse, Form, Input, Row, Select, Space, Typography } from "antd";
 import { EmptyState, MiniCard, Panel, SummaryList, TableCard } from "../../components/ui";
+import { COPY } from "../shared/copy";
 import { columnOptions, describeRule } from "../shared/utils";
 import { useExcelWorkbench } from "../workbench/useExcelWorkbench";
 
 const { Text } = Typography;
 
 export function CleaningSection({ workbench }: { workbench: ReturnType<typeof useExcelWorkbench> }) {
+  const hasColumns = workbench.columns.length > 0;
+  const hasCurrentTable = Boolean(workbench.currentTable);
+
   return (
-    <Space orientation="vertical" size="middle">
-      <Panel title="数据清洗工作台" subtitle="把输入、规则和结果拆分成独立区域，减少操作切换成本。">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} xl={15}>
-            <Form layout="vertical">
-              <Form.Item label="表格内容">
-                <Input.TextArea value={workbench.tableRaw} onChange={(event) => workbench.setTableRaw(event.target.value)} placeholder="姓名\t部门\t地区" rows={10} />
-              </Form.Item>
-              <Row gutter={[12, 12]}>
-                <Col xs={24} md={8}>
-                  <Form.Item label="分隔符">
-                    <Select
-                      value={workbench.tableDelimiter}
-                      onChange={workbench.setTableDelimiter}
-                      options={[
-                        { value: "tab", label: "Tab" },
-                        { value: ",", label: "逗号" },
-                        { value: ";", label: "分号" },
-                        { value: "|", label: "竖线" }
-                      ]}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Form.Item label="首行类型">
-                    <Checkbox checked={workbench.hasHeader} onChange={(event) => workbench.setHasHeader(event.target.checked)}>首行是表头</Checkbox>
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                  <Space>
-                    <Button type="primary" onClick={() => void workbench.refreshPreview()}>刷新预览</Button>
-                    <Button onClick={() => void workbench.exportCurrentTable("xlsx")}>导出 XLSX</Button>
-                    <Button onClick={() => void workbench.copyCsv()}>复制 CSV</Button>
-                  </Space>
-                </Col>
-              </Row>
-            </Form>
-          </Col>
-          <Col xs={24} xl={9}>
-            <Space orientation="vertical">
-              <MiniCard title="当前列绑定" value={workbench.selectedColumnName || "等待识别"} />
-              <MiniCard title="规则链" value={workbench.effectiveRules.map((rule) => describeRule(rule)).join(" -> ") || "未配置"} />
-              <MiniCard title="当前数据量" value={workbench.currentTable ? `${workbench.currentTable.rows.length} 行 / ${workbench.currentTable.columns.length} 列` : "未预览"} />
-            </Space>
-          </Col>
-        </Row>
+    <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
+      <Panel title={COPY.cleaning.panelTitle} subtitle={COPY.cleaning.panelSubtitle}>
+        <Form layout="vertical">
+          <Form.Item label={COPY.cleaning.rawLabel}>
+            <Input.TextArea value={workbench.tableRaw} onChange={(event) => workbench.setTableRaw(event.target.value)} placeholder={COPY.cleaning.rawPlaceholder} rows={10} />
+          </Form.Item>
+          <Row gutter={[12, 12]}>
+            <Form.Item style={{ minWidth: 180 }} label={COPY.cleaning.delimiterLabel}>
+              <Select value={workbench.tableDelimiter} onChange={workbench.setTableDelimiter} options={[...COPY.cleaning.delimiterOptions]} />
+            </Form.Item>
+            <Form.Item label={COPY.cleaning.firstRowLabel}>
+              <Checkbox checked={workbench.hasHeader} onChange={(event) => workbench.setHasHeader(event.target.checked)}>{COPY.cleaning.headerCheckbox}</Checkbox>
+            </Form.Item>
+            <Form.Item label={COPY.cleaning.operationLabel}>
+              <Space>
+                <Button disabled={!hasCurrentTable} onClick={() => void workbench.exportCurrentTable("xlsx")}>{COPY.actions.exportXlsx}</Button>
+                <Button disabled={!hasCurrentTable} onClick={() => void workbench.copyCsv()}>{COPY.actions.copyCsv}</Button>
+                <Button type="primary" loading={workbench.isPending("refreshPreview")} onClick={() => void workbench.refreshPreview()}>{COPY.actions.refreshPreview}</Button>
+              </Space>
+            </Form.Item>
+          </Row>
+        </Form>
+
+        <Space wrap>
+          <MiniCard title={COPY.cleaning.mini.currentColumn} value={workbench.selectedColumnName || COPY.cleaning.mini.currentColumnFallback} />
+          <MiniCard title={COPY.cleaning.mini.ruleChain} value={workbench.effectiveRules.map((rule) => describeRule(rule)).join(" -> ") || COPY.cleaning.mini.ruleChainFallback} />
+          <MiniCard title={COPY.cleaning.mini.dataSize} value={workbench.currentTable ? COPY.cleaning.mini.dataSizeValue(workbench.currentTable.rows.length, workbench.currentTable.columns.length) : COPY.cleaning.mini.dataSizeFallback} />
+        </Space>
       </Panel>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} xl={12} xxl={6}>
-          <Panel title="列规则" subtitle="按列做规范化处理，也支持规则链。">
-            <Form layout="vertical">
-              <Form.Item label="目标列">
-                <Select value={workbench.ruleColumnIndex} onChange={workbench.setRuleColumnIndex} options={columnOptions(workbench.columns)} />
-              </Form.Item>
-              <Form.Item label="规则类型">
-                <Select
-                  value={workbench.ruleType}
-                  onChange={workbench.setRuleType}
-                  options={[
-                    { value: "trim", label: "去首尾空格" },
-                    { value: "uppercase", label: "转大写" },
-                    { value: "lowercase", label: "转小写" },
-                    { value: "fill-empty", label: "空值填充" },
-                    { value: "format-number", label: "数字格式化" }
-                  ]}
-                />
-              </Form.Item>
-              <Form.Item label="填充值">
-                <Input value={workbench.ruleFill} onChange={(event) => workbench.setRuleFill(event.target.value)} />
-              </Form.Item>
-              <Form.Item label="保留小数位">
-                <Input type="number" min={0} value={workbench.ruleDecimals} onChange={(event) => workbench.setRuleDecimals(event.target.value)} />
-              </Form.Item>
-              <Space wrap>
-                <Button onClick={workbench.addRuleToChain}>加入规则链</Button>
-                <Button type="primary" onClick={() => void workbench.runColumnRule()}>应用当前规则</Button>
-                <Button onClick={() => void workbench.runRuleChain()}>应用规则链</Button>
-              </Space>
-            </Form>
-          </Panel>
-        </Col>
-
-        <Col xs={24} xl={12} xxl={6}>
-          <Panel title="重复值处理" subtitle="按整行或指定列去重。">
-            <Space orientation="vertical">
-              <Select
-                value={workbench.dedupeColumnIndex}
-                onChange={workbench.setDedupeColumnIndex}
-                options={[{ value: "__all__", label: "整行" }, ...columnOptions(workbench.columns)]}
-              />
-              <Button type="primary" onClick={() => void workbench.dedupeRows()}>执行去重</Button>
-            </Space>
-          </Panel>
-        </Col>
-
-        <Col xs={24} xl={12} xxl={6}>
-          <Panel title="分列" subtitle="按指定分隔符拆分列内容。">
-            <Form layout="vertical">
-              <Form.Item label="目标列">
-                <Select value={workbench.splitColumnIndex} onChange={workbench.setSplitColumnIndex} options={columnOptions(workbench.columns)} />
-              </Form.Item>
-              <Form.Item label="拆分符">
-                <Input value={workbench.splitDelimiter} onChange={(event) => workbench.setSplitDelimiter(event.target.value)} />
-              </Form.Item>
-              <Button type="primary" onClick={() => void workbench.splitColumn()}>执行分列</Button>
-            </Form>
-          </Panel>
-        </Col>
-
-        <Col xs={24} xl={12} xxl={6}>
-          <Panel title="合并列" subtitle="从多列拼出新字段。">
-            <Form layout="vertical">
-              <Form.Item label="目标列">
-                {workbench.columns.length ? (
-                  <Checkbox.Group
-                    value={workbench.mergeSelection}
-                    options={workbench.columns.map((column, index) => ({ label: column, value: index }))}
-                    onChange={(values) => {
-                      const selectedValues = values.map((value) => Number(value));
-                      workbench.columns.forEach((_, index) => {
-                        const selected = selectedValues.includes(index);
-                        const current = workbench.mergeSelection.includes(index);
-                        if (selected !== current) {
-                          workbench.toggleMergeColumn(index);
-                        }
-                      });
-                    }}
+      <Panel title={COPY.cleaning.advancedTitle} subtitle={COPY.cleaning.advancedSubtitle}>
+        <Collapse
+          defaultActiveKey={["column-rule"]}
+          items={[
+            {
+              key: "column-rule",
+              label: COPY.cleaning.sections.columnRule,
+              children: (
+                <Form layout="vertical">
+                  <Form.Item label={COPY.cleaning.labels.targetColumn}>
+                    <Select value={workbench.ruleColumnIndex} onChange={workbench.setRuleColumnIndex} options={columnOptions(workbench.columns)} />
+                  </Form.Item>
+                  <Form.Item label={COPY.cleaning.labels.ruleType}>
+                    <Select value={workbench.ruleType} onChange={workbench.setRuleType} options={[...COPY.cleaning.ruleTypeOptions]} />
+                  </Form.Item>
+                  <Form.Item label={COPY.cleaning.labels.fillValue}>
+                    <Input value={workbench.ruleFill} onChange={(event) => workbench.setRuleFill(event.target.value)} />
+                  </Form.Item>
+                  <Form.Item label={COPY.cleaning.labels.decimals}>
+                    <Input type="number" min={0} value={workbench.ruleDecimals} onChange={(event) => workbench.setRuleDecimals(event.target.value)} />
+                  </Form.Item>
+                  <Space wrap>
+                    <Button disabled={!hasColumns} onClick={workbench.addRuleToChain}>{COPY.cleaning.actions.addRule}</Button>
+                    <Button disabled={!hasColumns} type="primary" onClick={() => void workbench.runColumnRule()}>{COPY.cleaning.actions.applyCurrentRule}</Button>
+                    <Button disabled={!hasColumns} onClick={() => void workbench.runRuleChain()}>{COPY.cleaning.actions.applyRuleChain}</Button>
+                  </Space>
+                </Form>
+              )
+            },
+            {
+              key: "dedupe",
+              label: COPY.cleaning.sections.dedupe,
+              children: (
+                <Space orientation="vertical">
+                  <Select
+                    value={workbench.dedupeColumnIndex}
+                    onChange={workbench.setDedupeColumnIndex}
+                    options={[{ value: "__all__", label: COPY.cleaning.dedupeAllRows }, ...columnOptions(workbench.columns)]}
                   />
-                ) : (
-                  <EmptyState text="载入数据后可按列名勾选。" />
-                )}
-              </Form.Item>
-              <Form.Item label="连接符">
-                <Input value={workbench.mergeDelimiter} onChange={(event) => workbench.setMergeDelimiter(event.target.value)} />
-              </Form.Item>
-              <Form.Item label="新列名称">
-                <Input value={workbench.mergeName} onChange={(event) => workbench.setMergeName(event.target.value)} />
-              </Form.Item>
-              <Button type="primary" onClick={() => void workbench.mergeColumns()}>执行合并</Button>
-            </Form>
-          </Panel>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} xl={10}>
-          <Panel title="规则链面板" subtitle="批处理会直接复用这里的顺序。">
-            {workbench.ruleChain.length ? (
-              <Space orientation="vertical">
-                <Button onClick={() => workbench.updateRuleChain("clear")}>清空</Button>
-                {workbench.ruleChain.map((rule, index) => (
-                  <Card key={rule.id} size="small" title={`${index + 1}. ${rule.ruleType}`}>
-                    <Space orientation="vertical">
-                      <Text type="secondary">{describeRule(rule)}</Text>
-                      <Space wrap>
-                        <Button disabled={index === 0} onClick={() => workbench.updateRuleChain("up", rule.id)}>上移</Button>
-                        <Button disabled={index === workbench.ruleChain.length - 1} onClick={() => workbench.updateRuleChain("down", rule.id)}>下移</Button>
-                        <Button danger onClick={() => workbench.updateRuleChain("remove", rule.id)}>删除</Button>
+                  <Button disabled={!hasColumns} type="primary" onClick={() => void workbench.dedupeRows()}>{COPY.cleaning.actions.executeDedupe}</Button>
+                </Space>
+              )
+            },
+            {
+              key: "split",
+              label: COPY.cleaning.sections.split,
+              children: (
+                <Form layout="vertical">
+                  <Form.Item label={COPY.cleaning.labels.targetColumn}>
+                    <Select value={workbench.splitColumnIndex} onChange={workbench.setSplitColumnIndex} options={columnOptions(workbench.columns)} />
+                  </Form.Item>
+                  <Form.Item label={COPY.cleaning.labels.splitBy}>
+                    <Input value={workbench.splitDelimiter} onChange={(event) => workbench.setSplitDelimiter(event.target.value)} />
+                  </Form.Item>
+                  <Button disabled={!hasColumns} type="primary" onClick={() => void workbench.splitColumn()}>{COPY.cleaning.actions.executeSplit}</Button>
+                </Form>
+              )
+            },
+            {
+              key: "merge",
+              label: COPY.cleaning.sections.merge,
+              children: (
+                <Form layout="vertical">
+                  <Form.Item label={COPY.cleaning.labels.targetColumn}>
+                    {workbench.columns.length ? (
+                      <Checkbox.Group
+                        value={workbench.mergeSelection}
+                        options={workbench.columns.map((column, index) => ({ label: column, value: index }))}
+                        onChange={(values) => {
+                          const selectedValues = values.map((value) => Number(value));
+                          workbench.columns.forEach((_, index) => {
+                            const selected = selectedValues.includes(index);
+                            const current = workbench.mergeSelection.includes(index);
+                            if (selected !== current) {
+                              workbench.toggleMergeColumn(index);
+                            }
+                          });
+                        }}
+                      />
+                    ) : (
+                      <EmptyState text={COPY.cleaning.mergeColumnHint} />
+                    )}
+                  </Form.Item>
+                  <Form.Item label={COPY.cleaning.labels.joinBy}>
+                    <Input value={workbench.mergeDelimiter} onChange={(event) => workbench.setMergeDelimiter(event.target.value)} />
+                  </Form.Item>
+                  <Form.Item label={COPY.cleaning.labels.newColumnName}>
+                    <Input value={workbench.mergeName} onChange={(event) => workbench.setMergeName(event.target.value)} />
+                  </Form.Item>
+                  <Button
+                    disabled={!hasColumns || workbench.mergeSelection.length === 0 || workbench.mergeName.trim().length === 0}
+                    type="primary"
+                    onClick={() => void workbench.mergeColumns()}
+                  >
+                    {COPY.cleaning.actions.executeMerge}
+                  </Button>
+                </Form>
+              )
+            },
+            {
+              key: "rule-chain",
+              label: COPY.cleaning.sections.ruleChain,
+              children: workbench.ruleChain.length ? (
+                <Space orientation="vertical">
+                  <Button onClick={() => workbench.updateRuleChain("clear")}>{COPY.cleaning.actions.clearRuleChain}</Button>
+                  {workbench.ruleChain.map((rule, index) => (
+                    <Card key={rule.id} size="small" title={`${index + 1}. ${rule.ruleType}`}>
+                      <Space orientation="vertical">
+                        <Text type="secondary">{describeRule(rule)}</Text>
+                        <Space wrap>
+                          <Button disabled={index === 0} onClick={() => workbench.updateRuleChain("up", rule.id)}>{COPY.cleaning.actions.moveUp}</Button>
+                          <Button disabled={index === workbench.ruleChain.length - 1} onClick={() => workbench.updateRuleChain("down", rule.id)}>{COPY.cleaning.actions.moveDown}</Button>
+                          <Button danger onClick={() => workbench.updateRuleChain("remove", rule.id)}>{COPY.cleaning.actions.remove}</Button>
+                        </Space>
                       </Space>
-                    </Space>
-                  </Card>
-                ))}
-              </Space>
-            ) : (
-              <EmptyState text="尚未添加规则，批处理会回退到当前单步规则。" />
-            )}
-          </Panel>
-        </Col>
-        <Col xs={24} xl={14}>
-          <Panel title="处理结果" subtitle="预览清洗后的表格数据。">
-            <SummaryList items={workbench.currentTable?.summary ?? []} fallback="先刷新预览或执行清洗动作。" />
-            <TableCard columns={workbench.currentTable?.columns ?? []} rows={workbench.currentTable?.rows ?? []} emptyText="等待生成结果" />
-          </Panel>
-        </Col>
-      </Row>
+                    </Card>
+                  ))}
+                </Space>
+              ) : (
+                <EmptyState text={COPY.cleaning.ruleChainEmpty} />
+              )
+            }
+          ]}
+        />
+      </Panel>
+
+      <Panel title={COPY.cleaning.resultTitle} subtitle={COPY.cleaning.resultSubtitle}>
+        <SummaryList items={workbench.currentTable?.summary ?? []} fallback={COPY.cleaning.resultFallback} />
+        <TableCard columns={workbench.currentTable?.columns ?? []} rows={workbench.currentTable?.rows ?? []} emptyText={COPY.cleaning.resultEmptyText} />
+      </Panel>
     </Space>
   );
 }
+
+
 

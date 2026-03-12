@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { App as AntApp, ConfigProvider, theme as antdTheme } from "antd";
 import { ReactNode, useMemo, useState } from "react";
@@ -32,6 +32,8 @@ export function WorkbenchRoot({ children }: { children: ReactNode }) {
             themeMode={themeMode}
             onThemeModeChange={setThemeMode}
             isDark={isDark}
+            status={workbench.status}
+            isOpenWorkbookPending={workbench.isPending("openWorkbook")}
           >
             {children}
           </WorkbenchShell>

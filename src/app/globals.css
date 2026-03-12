@@ -9,6 +9,131 @@ body {
   min-height: 100%;
 }
 
+body {
+  overflow: hidden;
+}
+
+.workbench-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.workbench-titlebar {
+  height: 38px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding-left: 8px;
+  padding-right: 0;
+  background: var(--wb-titlebar-bg);
+  border-bottom: 1px solid var(--wb-border-color);
+  user-select: none;
+}
+
+.workbench-titlebar__left,
+.workbench-titlebar__center {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workbench-titlebar__left .ant-typography,
+.workbench-titlebar__center .ant-typography {
+  margin-bottom: 0;
+}
+
+.workbench-titlebar__center {
+  justify-content: center;
+}
+
+.workbench-titlebar__workbook {
+  max-width: 380px;
+}
+
+.workbench-titlebar__workbook .ant-typography {
+  max-width: 340px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workbench-titlebar__right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workbench-appmark {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wb-appmark-fg);
+  background: var(--wb-appmark-bg);
+}
+
+.workbench-titlebar__toggle,
+.workbench-titlebar__primary {
+  border-radius: 4px;
+}
+
+
+
+
+
+.workbench-window-controls.ant-space {
+  gap: 0 !important;
+}
+
+.workbench-window-controls__btn.ant-btn {
+  width: 44px;
+  height: 38px;
+  border-radius: 0;
+  
+}
+
+.workbench-window-controls__btn.ant-btn:hover {
+  background: var(--wb-control-hover-bg);
+}
+
+.workbench-window-controls__btn--close.ant-btn:hover {
+  background: #e81123;
+  color: #ffffff;
+}
+
+.workbench-main {
+  min-height: 0;
+  flex: 1;
+}
+
+.workbench-main .ant-layout-sider {
+  border-right: 1px solid var(--wb-border-color);
+}
+
+.workbench-main .ant-menu {
+  border-inline-end: 0 !important;
+}
+
+.workbench-main .ant-menu-inline .ant-menu-item {
+  height: 34px;
+  line-height: 34px;
+  margin-inline: 8px;
+  width: calc(100% - 16px);
+  border-radius: 6px;
+}
+
+.workbench-content {
+  overflow: auto;
+  height: 100%;
+  padding: 12px;
+}
+
 .global-loading {
   min-height: 100vh;
   display: flex;
@@ -44,3 +169,4 @@ body {
     transform: rotate(360deg);
   }
 }
+

@@ -2,6 +2,7 @@
 import { Button, Card, Empty, Form, Input, List, Select, Space, Statistic, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { BatchFileResult, CleanResult, MetricEntry, ViewKey } from "../features/shared/types";
+import { COPY } from "../features/shared/copy";
 
 const { Paragraph, Text } = Typography;
 
@@ -62,7 +63,7 @@ export function TableCard({ columns, rows, emptyText }: { columns: string[]; row
 }
 
 export function BatchTable({ results }: { results: BatchFileResult[] }) {
-  if (results.length === 0) return <EmptyState text="选择文件和输出目录后开始运行。" />;
+  if (results.length === 0) return <EmptyState text={COPY.empty.batchRunHint} />;
   const columns: ColumnsType<BatchFileResult> = [
     { title: "状态", dataIndex: "status", key: "status" },
     { title: "输入", dataIndex: "inputPath", key: "inputPath" },
@@ -125,21 +126,21 @@ export function SelectField({ label, value, onChange, options }: { label: string
   );
 }
 
-export function DashboardView({ dashboardCards, onNavigate, onOpenWorkbook, onRefreshPreview, currentTable, financeResult, batchResult }: { dashboardCards: Array<{ key: ViewKey; title: string; desc: string; metric: string }>; onNavigate: (key: ViewKey) => void; onOpenWorkbook: () => void; onRefreshPreview: () => Promise<void>; currentTable: CleanResult | null; financeResult: CleanResult | null; batchResult: { processed: number } | null; }) {
+export function DashboardView({ dashboardCards, onNavigate, onOpenWorkbook, onRefreshPreview, currentTable, financeResult, batchResult, isOpenWorkbookPending, isRefreshPreviewPending }: { dashboardCards: Array<{ key: ViewKey; title: string; desc: string; metric: string }>; onNavigate: (key: ViewKey) => void; onOpenWorkbook: () => void; onRefreshPreview: () => Promise<void>; currentTable: CleanResult | null; financeResult: CleanResult | null; batchResult: { processed: number } | null; isOpenWorkbookPending: boolean; isRefreshPreviewPending: boolean; }) {
   return (
     <Space orientation="vertical" size="middle">
       <Card
         title="工作区快捷入口"
         extra={(
           <Space>
-            <Button type="primary" onClick={onOpenWorkbook}>打开工作簿</Button>
-            <Button onClick={() => void onRefreshPreview()}>刷新预览</Button>
+            <Button loading={isRefreshPreviewPending} onClick={() => void onRefreshPreview()}>{COPY.actions.refreshPreview}</Button>
+            <Button type="primary" loading={isOpenWorkbookPending} onClick={onOpenWorkbook}>{COPY.actions.importWorkbook}</Button>
           </Space>
         )}
       >
         <Space wrap>
           {dashboardCards.map((card) => (
-            <Card key={card.key} title={card.title} extra={<Button type="link" onClick={() => onNavigate(card.key)}>进入</Button>}>
+            <Card key={card.key} size="small" title={card.title} extra={<Button type="link" onClick={() => onNavigate(card.key)}>进入</Button>}>
               <Space orientation="vertical">
                 <Text type="secondary">{card.desc}</Text>
                 <Text strong>{card.metric}</Text>
@@ -158,4 +159,6 @@ export function DashboardView({ dashboardCards, onNavigate, onOpenWorkbook, onRe
     </Space>
   );
 }
+
+
 

@@ -1,8 +1,9 @@
 ﻿"use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
+  App,
   Badge,
   Button,
   Card,
@@ -14,18 +15,21 @@ import {
   Segmented,
   Space,
   Statistic,
+  theme,
   Typography
 } from "antd";
 import {
   BorderOutlined,
   CloseOutlined,
   CopyOutlined,
+  FileExcelOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MinusOutlined
 } from "@ant-design/icons";
 import { navItems } from "./constants";
-import { ViewKey, WorkbookInfo } from "../shared/types";
+import { StatusTone, ViewKey, WorkbookInfo } from "../shared/types";
+import { COPY } from "../shared/copy";
 
 const { Sider, Content } = Layout;
 const { Paragraph, Text } = Typography;
@@ -72,16 +76,36 @@ function WindowControls() {
   const appWindow = getCurrentWindow();
 
   return (
-    <Space data-tauri-drag-region>
-      <Button aria-label="最小化窗口" icon={<MinusOutlined />} onClick={() => void appWindow.minimize()} />
+    <Space size={0} className="workbench-window-controls">
       <Button
+        type="text"
+        className="workbench-window-controls__btn"
+        aria-label="最小化窗口"
+        icon={<MinusOutlined />}
+        onClick={() => void appWindow.minimize()}
+      />
+      <Button
+        type="text"
+        className="workbench-window-controls__btn"
         aria-label={isMaximized ? "还原窗口" : "最大化窗口"}
         icon={isMaximized ? <CopyOutlined /> : <BorderOutlined />}
         onClick={() => void appWindow.toggleMaximize()}
       />
-      <Button danger aria-label="关闭窗口" icon={<CloseOutlined />} onClick={() => void appWindow.close()} />
+      <Button
+        type="text"
+        className="workbench-window-controls__btn workbench-window-controls__btn--close"
+        aria-label="关闭窗口"
+        icon={<CloseOutlined />}
+        onClick={() => void appWindow.close()}
+      />
     </Space>
   );
+}
+
+function messageType(tone: StatusTone): "success" | "warning" | "error" {
+  if (tone === "warning") return "warning";
+  if (tone === "error") return "error";
+  return "success";
 }
 
 export function WorkbenchShell({
@@ -93,6 +117,8 @@ export function WorkbenchShell({
   themeMode,
   onThemeModeChange,
   isDark,
+  status,
+  isOpenWorkbookPending,
   children
 }: {
   activeView: ViewKey;
@@ -103,115 +129,149 @@ export function WorkbenchShell({
   themeMode: ThemeMode;
   onThemeModeChange: (mode: ThemeMode) => void;
   isDark: boolean;
+  status: { message: string; tone: StatusTone };
+  isOpenWorkbookPending: boolean;
   children: ReactNode;
 }) {
   const navMeta = navItems.find((item) => item.key === activeView) ?? navItems[0];
   const [collapsed, setCollapsed] = useState(false);
+  const { message } = App.useApp();
+  const { token } = theme.useToken();
+  const lastStatus = useRef<string>("");
+
+  useEffect(() => {
+    const signature = `${status.tone}:${status.message}`;
+    if (signature === lastStatus.current) {
+      return;
+    }
+    lastStatus.current = signature;
+
+    if (status.tone === "info") {
+      return;
+    }
+
+    void message.open({
+      type: messageType(status.tone),
+      content: status.message,
+      duration: 2
+    });
+  }, [message, status.message, status.tone]);
+
+  const shellStyle = {
+    "--wb-titlebar-bg": token.colorBgContainer,
+    "--wb-border-color": token.colorBorderSecondary,
+    "--wb-appmark-fg": token.colorPrimary,
+    "--wb-appmark-bg": token.colorFillSecondary,
+    "--wb-control-hover-bg": token.colorFillTertiary
+  } as CSSProperties;
 
   return (
-    <Layout hasSider style={{ minHeight: "100vh" }}>
-      <Sider
-        width={232}
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        collapsedWidth={72}
-        trigger={null}
-        theme={isDark ? "dark" : "light"}
-      >
-        <Flex vertical gap="small" style={{ paddingBlock: 12 }}>
-          <Text strong style={{ paddingInline: 16, color: isDark ? "rgba(255,255,255,0.92)" : undefined }}>
-            {collapsed ? "Excel" : "Excel Utils"}
-          </Text>
-          <Menu
-            mode="inline"
-            theme={isDark ? "dark" : "light"}
-            selectedKeys={[activeView]}
-            onSelect={({ key }) => onNavigate(key as ViewKey)}
-            items={navItems.map((item) => ({
-              key: item.key,
-              label: item.label
-            }))}
+    <div className="workbench-shell" style={shellStyle}>
+      <header className="workbench-titlebar" data-tauri-drag-region>
+        <div className="workbench-titlebar__left" data-tauri-drag-region>
+          <div className="workbench-appmark" aria-hidden>
+            <FileExcelOutlined />
+          </div>
+          <Text strong>Excel Utils</Text>
+          <Button
+            type="text"
+            size="small"
+            className="workbench-titlebar__toggle"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed((prev) => !prev)}
           />
-        </Flex>
-      </Sider>
+          <Text type="secondary">{navMeta.label}</Text>
+        </div>
 
-      <Layout>
-        <Content style={{ overflow: "auto", height: "100vh" }}>
-          <Row gutter={[0, 16]}>
-            <Col span={24}>
-              <Card>
-                <div
-                  data-tauri-drag-region
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr auto 1fr",
-                    alignItems: "center",
-                    columnGap: 12
-                  }}
-                >
-                  <Space data-tauri-drag-region>
-                    <Button
-                      icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                      onClick={() => setCollapsed((prev) => !prev)}
-                    />
-                    <Text strong>{navMeta.label}</Text>
-                  </Space>
+        <div className="workbench-titlebar__center" data-tauri-drag-region>
+          {workbookInfo ? (
+            <Space className="workbench-titlebar__workbook">
+              <Badge status="success" />
+              <Text>{workbookInfo.fileName}</Text>
+            </Space>
+          ) : (
+            <Button
+              type="primary"
+              size="small"
+              className="workbench-titlebar__primary"
+              loading={isOpenWorkbookPending}
+              onClick={() => void onOpenWorkbook()}
+            >
+              {COPY.actions.importWorkbook}
+            </Button>
+          )}
+        </div>
 
-                  {workbookInfo ? (
-                    <Space>
-                      <Badge status="success" />
-                      <Text strong>{workbookInfo.fileName}</Text>
-                    </Space>
-                  ) : (
-                    <Button type="primary" onClick={() => void onOpenWorkbook()}>
-                      打开工作簿
-                    </Button>
-                  )}
+        <div className="workbench-titlebar__right">
+          <Segmented
+            className="workbench-titlebar__segmented"
+            size="small"
+            value={themeMode}
+            onChange={(value) => onThemeModeChange(value as ThemeMode)}
+            options={[
+              { label: "默认", value: "default" },
+              { label: "暗色", value: "dark" },
+              { label: "紧凑", value: "compact" },
+              { label: "暗色+紧凑", value: "dark-compact" }
+            ]}
+          />
+          <WindowControls />
+        </div>
+      </header>
 
-                  <Space data-tauri-drag-region style={{ justifySelf: "end" }}>
-                    <Segmented
-                      value={themeMode}
-                      onChange={(value) => onThemeModeChange(value as ThemeMode)}
-                      options={[
-                        { label: "默认", value: "default" },
-                        { label: "暗色", value: "dark" },
-                        { label: "紧凑", value: "compact" },
-                        { label: "暗色+紧凑", value: "dark-compact" }
-                      ]}
-                    />
-                    <WindowControls />
-                  </Space>
-                </div>
-              </Card>
-            </Col>
+      <Layout hasSider className="workbench-main">
+        <Sider
+          width={232}
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          collapsedWidth={72}
+          trigger={null}
+          theme={isDark ? "dark" : "light"}
+        >
+          <Flex vertical gap="small" style={{ paddingBlock: 8 }}>
+            <Menu
+              mode="inline"
+              theme={isDark ? "dark" : "light"}
+              selectedKeys={[activeView]}
+              onSelect={({ key }) => onNavigate(key as ViewKey)}
+              items={navItems.map((item) => ({
+                key: item.key,
+                label: item.label
+              }))}
+            />
+          </Flex>
+        </Sider>
 
-            <Col span={24}>
-              <Card title={navMeta.label}>
-                <Paragraph type="secondary">{navMeta.desc}</Paragraph>
-                <Row gutter={[12, 12]}>
-                  {stats.map((item) => (
-                    <Col key={item.label} xs={24} sm={12} lg={6}>
-                      <Card size="small">
+        <Layout>
+          <Content className="workbench-content">
+            <Row gutter={[0, 16]}>
+              <Col span={24}>
+                <Card title={navMeta.label}>
+                  <Paragraph type="secondary">{navMeta.desc}</Paragraph>
+                  <Row gutter={[12, 12]}>
+                    {stats.map((item) => (
+                      <Col key={item.label} xs={24} sm={12} lg={6}>
                         <Statistic title={item.label} value={item.value} />
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Card>
-            </Col>
+                      </Col>
+                    ))}
+                  </Row>
+                </Card>
+              </Col>
 
-            <Col span={24}>
-              <Card>
-                <Space orientation="vertical" size="middle">
+              <Col span={24}>
+                <Space orientation="vertical" size="middle" style={{ width: "100%" }}>
                   <Text type="secondary">当前模块内容</Text>
                   {children}
                 </Space>
-              </Card>
-            </Col>
-          </Row>
-        </Content>
+              </Col>
+            </Row>
+          </Content>
+        </Layout>
       </Layout>
-    </Layout>
+    </div>
   );
 }
+
+
+

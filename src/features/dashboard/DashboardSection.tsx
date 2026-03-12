@@ -1,4 +1,4 @@
-﻿import { DashboardView } from "../../components/ui";
+import { DashboardView } from "../../components/ui";
 import { useExcelWorkbench } from "../workbench/useExcelWorkbench";
 
 export function DashboardSection({ workbench }: { workbench: ReturnType<typeof useExcelWorkbench> }) {
@@ -11,6 +11,8 @@ export function DashboardSection({ workbench }: { workbench: ReturnType<typeof u
       currentTable={workbench.currentTable}
       financeResult={workbench.financeResult}
       batchResult={workbench.batchResult}
+      isOpenWorkbookPending={workbench.isPending("openWorkbook")}
+      isRefreshPreviewPending={workbench.isPending("refreshPreview")}
     />
   );
 }

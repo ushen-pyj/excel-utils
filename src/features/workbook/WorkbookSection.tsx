@@ -1,20 +1,31 @@
 ﻿import { Button, Card, Col, Empty, InputNumber, Row, Select, Space, Typography } from "antd";
 import { InfoCard, Panel } from "../../components/ui";
 import { useExcelWorkbench } from "../workbench/useExcelWorkbench";
+import { COPY } from "../shared/copy";
 
 const { Text } = Typography;
 
 export function WorkbookSection({ workbench }: { workbench: ReturnType<typeof useExcelWorkbench> }) {
+  const hasWorkbook = Boolean(workbench.workbookInfo);
+  const hasCurrentTable = Boolean(workbench.currentTable);
+
   return (
     <Space orientation="vertical" size="middle">
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={14}>
           <Panel title="工作簿导入台" subtitle="连接本地 Excel / CSV，管理文件信息与工作表入口。">
             <Space wrap>
-              <Button type="primary" onClick={workbench.openWorkbook}>打开工作簿</Button>
-              <Button onClick={() => void workbench.loadSheet()}>载入当前工作表</Button>
-              <Button onClick={() => void workbench.exportCurrentTable("xlsx")}>导出 XLSX</Button>
-              <Button onClick={() => void workbench.exportCurrentTable("csv")}>导出 CSV</Button>
+              <Button loading={workbench.isPending("openWorkbook")} onClick={workbench.openWorkbook}>{COPY.actions.importWorkbook}</Button>
+              <Button
+                type="primary"
+                loading={workbench.isPending("loadSheet")}
+                disabled={!hasWorkbook || !workbench.selectedSheet}
+                onClick={() => void workbench.loadSheet()}
+              >
+                {COPY.actions.loadCurrentSheet}
+              </Button>
+              <Button disabled={!hasCurrentTable} onClick={() => void workbench.exportCurrentTable("xlsx")}>{COPY.actions.exportXlsx}</Button>
+              <Button disabled={!hasCurrentTable} onClick={() => void workbench.exportCurrentTable("csv")}>{COPY.actions.exportCsv}</Button>
             </Space>
             <Row gutter={[12, 12]}>
               <Col xs={24} md={12}>
@@ -31,6 +42,7 @@ export function WorkbookSection({ workbench }: { workbench: ReturnType<typeof us
               <Col xs={24} md={16}>
                 <Text>工作表</Text>
                 <Select
+                  disabled={!hasWorkbook}
                   value={workbench.selectedSheet}
                   onChange={workbench.setSelectedSheet}
                   options={workbench.workbookInfo?.sheets.length
@@ -69,7 +81,7 @@ export function WorkbookSection({ workbench }: { workbench: ReturnType<typeof us
                   </Card>
                 ))
               ) : (
-                <Empty description="导入工作簿后，这里会列出所有工作表。" />
+                <Empty description={COPY.empty.workbookSheetsHint} />
               )}
             </Space>
           </Panel>
@@ -78,4 +90,6 @@ export function WorkbookSection({ workbench }: { workbench: ReturnType<typeof us
     </Space>
   );
 }
+
+
 
