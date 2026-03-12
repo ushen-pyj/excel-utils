@@ -19,6 +19,7 @@ pub use workbook::{export_table, inspect_workbook, load_sheet_table};
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             cleaning::preview_input_table,
             workbook::inspect_workbook,

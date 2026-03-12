@@ -2,10 +2,13 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { baseTableInput, columnOptions, currency, describeRule, effectiveDelimiter, inferredTableFromTextarea, irrRequest, loanRequest, normalizeColumnIndex, npvRequest, selectedSheetName, signatureFor, tableToText } from "../shared/utils";
-import { BatchProcessResult, BatchRule, CleanResult, ExportResult, IrrResult, LoanResult, MetricEntry, NpvResult, PrintResult, RuleChainItem, StatusTone, ViewKey, WorkbookInfo } from "../shared/types";
+import { BatchProcessResult, BatchRule, CleanResult, ExportResult, IrrResult, LoanResult, MetricEntry, NpvResult, PrintResult, RecentWorkbookEntry, RuleChainItem, StatusTone, ViewKey, WorkbookInfo } from "../shared/types";
 import { COPY } from "../shared/copy";
+
+const RECENT_WORKBOOKS_KEY = "excel-utils.recent-workbooks";
+const MAX_RECENT_WORKBOOKS = 8;
 
 export function useExcelWorkbench() {
   const [activeView, setActiveView] = useState<ViewKey>("dashboard");
@@ -49,6 +52,20 @@ export function useExcelWorkbench() {
   const [irrMetrics, setIrrMetrics] = useState<MetricEntry[]>([]);
   const [printTitle, setPrintTitle] = useState("Excel 工具箱打印预览");
   const [pendingActions, setPendingActions] = useState<Record<string, boolean>>({});
+  const [recentWorkbooks, setRecentWorkbooks] = useState<RecentWorkbookEntry[]>([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const cached = window.localStorage.getItem(RECENT_WORKBOOKS_KEY);
+      if (!cached) return;
+      const parsed = JSON.parse(cached) as RecentWorkbookEntry[];
+      if (!Array.isArray(parsed)) return;
+      setRecentWorkbooks(parsed.filter((item) => item?.path && item?.fileName).slice(0, MAX_RECENT_WORKBOOKS));
+    } catch {
+      // Ignore malformed local cache.
+    }
+  }, []);
 
   const sourceTable = currentTable ?? inferredTableFromTextarea(tableRaw, tableDelimiter, hasHeader);
   const columns = sourceTable?.columns ?? [];
@@ -134,22 +151,48 @@ export function useExcelWorkbench() {
     setAppStatus(error instanceof Error ? error.message : String(error), "error");
   }
 
+
+  function rememberWorkbook(path: string, fileName: string) {
+    setRecentWorkbooks((prev) => {
+      const next = [{ path, fileName, lastOpenedAt: Date.now() }, ...prev.filter((item) => item.path !== path)].slice(0, MAX_RECENT_WORKBOOKS);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(RECENT_WORKBOOKS_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
+  }
+
+  async function openWorkbookFromPath(path: string) {
+    const info = await invoke<WorkbookInfo>("inspect_workbook", { path });
+    setWorkbookInfo(info);
+    setSelectedSheet(info.sheets[0]?.name ?? "");
+    setActiveView("workbook");
+    rememberWorkbook(info.path, info.fileName);
+    setAppStatus(COPY.status.importedWorkbook(info.fileName), "success");
+  }
+
   async function openWorkbook() {
     await runWithPending("openWorkbook", async () => {
       try {
         const selected = await open({ multiple: false, directory: false, filters: [{ name: "Spreadsheet", extensions: ["xlsx", "xlsm", "xls", "csv"] }] });
         if (!selected || Array.isArray(selected)) return;
-        const info = await invoke<WorkbookInfo>("inspect_workbook", { path: selected });
-        setWorkbookInfo(info);
-        setSelectedSheet(info.sheets[0]?.name ?? "");
-        setActiveView("workbook");
-        setAppStatus(COPY.status.importedWorkbook(info.fileName), "success");
+        await openWorkbookFromPath(selected);
       } catch (error) {
         handleError(error);
       }
     });
   }
 
+
+  async function openRecentWorkbook(path: string) {
+    await runWithPending("openWorkbook", async () => {
+      try {
+        await openWorkbookFromPath(path);
+      } catch (error) {
+        handleError(error);
+      }
+    });
+  }
   async function loadSheet() {
     await runWithPending("loadSheet", async () => {
       try {
@@ -405,7 +448,7 @@ export function useExcelWorkbench() {
   return {
     activeView, setActiveView, status, isPending,
     tableRaw, setTableRaw, tableDelimiter, setTableDelimiter, hasHeader, setHasHeader, sheetLimit, setSheetLimit,
-    workbookInfo, selectedSheet, setSelectedSheet, currentTable, financeResult, printResult,
+    workbookInfo, selectedSheet, setSelectedSheet, currentTable, financeResult, printResult, recentWorkbooks,
     latestCsv, ruleType, setRuleType, ruleFill, setRuleFill, ruleDecimals, setRuleDecimals,
     ruleColumnIndex, setRuleColumnIndex, dedupeColumnIndex, setDedupeColumnIndex, splitColumnIndex, setSplitColumnIndex,
     splitDelimiter, setSplitDelimiter, mergeDelimiter, setMergeDelimiter, mergeName, setMergeName,
@@ -414,7 +457,7 @@ export function useExcelWorkbench() {
     npvRate, setNpvRate, npvInvestment, setNpvInvestment, npvCashflows, setNpvCashflows, npvMetrics,
     irrCashflows, setIrrCashflows, irrGuess, setIrrGuess, irrMetrics,
     printTitle, setPrintTitle, columns, sourceTable, selectedColumnName, effectiveRules, stats, dashboardCards,
-    openWorkbook, loadSheet, refreshPreview, runColumnRule, runRuleChain, addRuleToChain, dedupeRows, splitColumn, mergeColumns,
+    openWorkbook, openRecentWorkbook, loadSheet, refreshPreview, runColumnRule, runRuleChain, addRuleToChain, dedupeRows, splitColumn, mergeColumns,
     copyCsv, exportCurrentTable, pickBatchFiles, pickBatchOutputDir, runBatch, calculateLoan, generateSchedule, calculateNpv,
     generateSensitivity, calculateIrr, useFinanceTable, previewPrint, printNow, toggleMergeColumn, updateRuleChain
   };
@@ -437,8 +480,3 @@ async function invokeRuleChain(input: { raw: string; delimiter: string; hasHeade
   if (!lastResult) throw new Error("请先配置至少一个规则");
   return { ...lastResult, summary: [`规则链已执行 ${rules.length} 步`, ...rules.map((rule, index) => `${index + 1}. ${describeRule(rule)}`), ...lastResult.summary] };
 }
-
-
-
-
-

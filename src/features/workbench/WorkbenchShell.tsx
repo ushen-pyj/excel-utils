@@ -1,40 +1,53 @@
 ﻿"use client";
 
-import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
+import { CSSProperties, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   App,
-  Badge,
+
   Button,
   Card,
   Col,
+  Dropdown,
   Flex,
   Layout,
   Menu,
+  MenuProps,
+  Modal,
   Row,
-  Segmented,
   Space,
   Statistic,
   theme,
   Typography
 } from "antd";
 import {
+  BgColorsOutlined,
   BorderOutlined,
   CloseOutlined,
   CopyOutlined,
+  DownOutlined,
   FileExcelOutlined,
+  FolderOpenOutlined,
   MenuFoldOutlined,
+  MenuOutlined,
   MenuUnfoldOutlined,
   MinusOutlined
 } from "@ant-design/icons";
 import { navItems } from "./constants";
-import { StatusTone, ViewKey, WorkbookInfo } from "../shared/types";
+import { RecentWorkbookEntry, StatusTone, ViewKey, WorkbookInfo } from "../shared/types";
 import { COPY } from "../shared/copy";
 
 const { Sider, Content } = Layout;
 const { Paragraph, Text } = Typography;
 
 export type ThemeMode = "default" | "dark" | "compact" | "dark-compact";
+
+const themeOptions: Array<{ label: string; value: ThemeMode; desc: string }> = [
+  { label: "默认", value: "default", desc: "平衡信息密度，适合大多数场景。" },
+  { label: "暗色", value: "dark", desc: "夜间阅读更舒适，减少眩光。" },
+  { label: "紧凑", value: "compact", desc: "更高信息密度，适合大量表格操作。" },
+  { label: "暗色 + 紧凑", value: "dark-compact", desc: "暗色界面并保留高密度布局。" }
+];
 
 function WindowControls() {
   const [isTauriWindow, setIsTauriWindow] = useState(false);
@@ -108,11 +121,51 @@ function messageType(tone: StatusTone): "success" | "warning" | "error" {
   return "success";
 }
 
+function workbookMenuItems(recentWorkbooks: RecentWorkbookEntry[], isOpenWorkbookPending: boolean): MenuProps["items"] {
+  const recentItems = recentWorkbooks.map((item, index) => ({
+    key: `recent:${index}`,
+    icon: <FileExcelOutlined />,
+    label: (
+      <div className="workbench-menu__recent-item">
+        <div className="workbench-menu__recent-name">{item.fileName}</div>
+        <div className="workbench-menu__recent-path">{item.path}</div>
+      </div>
+    )
+  }));
+
+  return [
+    {
+      key: "import",
+      icon: <FolderOpenOutlined />,
+      disabled: isOpenWorkbookPending,
+      label: COPY.actions.importWorkbook
+    },
+    {
+      key: "theme",
+      icon: <BgColorsOutlined />,
+      label: "主题设置"
+    },
+    { type: "divider" },
+    ...(recentItems.length > 0
+      ? [
+          {
+            key: "recent-group",
+            type: "group" as const,
+            label: "最近打开",
+            children: recentItems
+          }
+        ]
+      : [{ key: "recent-empty", disabled: true, label: "暂无最近打开记录" }])
+  ];
+}
+
 export function WorkbenchShell({
   activeView,
   onNavigate,
   workbookInfo,
   onOpenWorkbook,
+  onOpenRecentWorkbook,
+  recentWorkbooks,
   stats,
   themeMode,
   onThemeModeChange,
@@ -125,6 +178,8 @@ export function WorkbenchShell({
   onNavigate: (key: ViewKey) => void;
   workbookInfo: WorkbookInfo | null;
   onOpenWorkbook: () => Promise<void>;
+  onOpenRecentWorkbook: (path: string) => Promise<void>;
+  recentWorkbooks: RecentWorkbookEntry[];
   stats: Array<{ label: string; value: string }>;
   themeMode: ThemeMode;
   onThemeModeChange: (mode: ThemeMode) => void;
@@ -135,9 +190,12 @@ export function WorkbenchShell({
 }) {
   const navMeta = navItems.find((item) => item.key === activeView) ?? navItems[0];
   const [collapsed, setCollapsed] = useState(false);
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
   const { message } = App.useApp();
   const { token } = theme.useToken();
   const lastStatus = useRef<string>("");
+
+  const menuItems = useMemo(() => workbookMenuItems(recentWorkbooks, isOpenWorkbookPending), [recentWorkbooks, isOpenWorkbookPending]);
 
   useEffect(() => {
     const signature = `${status.tone}:${status.message}`;
@@ -169,10 +227,6 @@ export function WorkbenchShell({
     <div className="workbench-shell" style={shellStyle}>
       <header className="workbench-titlebar" data-tauri-drag-region>
         <div className="workbench-titlebar__left" data-tauri-drag-region>
-          <div className="workbench-appmark" aria-hidden>
-            <FileExcelOutlined />
-          </div>
-          <Text strong>Excel Utils</Text>
           <Button
             type="text"
             size="small"
@@ -180,41 +234,50 @@ export function WorkbenchShell({
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed((prev) => !prev)}
           />
-          <Text type="secondary">{navMeta.label}</Text>
+
+          <div className="workbench-appmark" aria-hidden>
+            <FileExcelOutlined />
+          </div>
+          <Text strong>Excel Utils</Text>
+
+          <Dropdown
+            trigger={["click"]}
+            menu={{
+              items: menuItems,
+              onClick: ({ key }) => {
+                if (key === "import") {
+                  void onOpenWorkbook();
+                  return;
+                }
+                if (key === "theme") {
+                  setThemeModalOpen(true);
+                  return;
+                }
+                if (typeof key === "string" && key.startsWith("recent:")) {
+                  const index = Number(key.split(":")[1]);
+                  const target = recentWorkbooks[index];
+                  if (target?.path) {
+                    void onOpenRecentWorkbook(target.path);
+                  }
+                }
+              }
+            }}
+          >
+            <Button
+              type="text"
+              size="small"
+              className="workbench-titlebar__menu-btn"
+              icon={<MenuOutlined />}
+              title={workbookInfo?.fileName ?? "未打开"}
+            >
+              <span className="workbench-titlebar__menu-label">{workbookInfo?.fileName ?? "未打开"}</span> <DownOutlined />
+            </Button>
+          </Dropdown>
         </div>
 
-        <div className="workbench-titlebar__center" data-tauri-drag-region>
-          {workbookInfo ? (
-            <Space className="workbench-titlebar__workbook">
-              <Badge status="success" />
-              <Text>{workbookInfo.fileName}</Text>
-            </Space>
-          ) : (
-            <Button
-              type="primary"
-              size="small"
-              className="workbench-titlebar__primary"
-              loading={isOpenWorkbookPending}
-              onClick={() => void onOpenWorkbook()}
-            >
-              {COPY.actions.importWorkbook}
-            </Button>
-          )}
-        </div>
+        <div className="workbench-titlebar__center" data-tauri-drag-region />
 
         <div className="workbench-titlebar__right">
-          <Segmented
-            className="workbench-titlebar__segmented"
-            size="small"
-            value={themeMode}
-            onChange={(value) => onThemeModeChange(value as ThemeMode)}
-            options={[
-              { label: "默认", value: "default" },
-              { label: "暗色", value: "dark" },
-              { label: "紧凑", value: "compact" },
-              { label: "暗色+紧凑", value: "dark-compact" }
-            ]}
-          />
           <WindowControls />
         </div>
       </header>
@@ -269,9 +332,28 @@ export function WorkbenchShell({
           </Content>
         </Layout>
       </Layout>
+
+      <Modal title="主题设置" open={themeModalOpen} onCancel={() => setThemeModalOpen(false)} footer={null} width={420}>
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          {themeOptions.map((option) => (
+            <Card
+              key={option.value}
+              size="small"
+              className={themeMode === option.value ? "workbench-theme-card workbench-theme-card--active" : "workbench-theme-card"}
+              onClick={() => {
+                onThemeModeChange(option.value);
+                setThemeModalOpen(false);
+              }}
+            >
+              <Space direction="vertical" size={2} style={{ width: "100%" }}>
+                <Text strong>{option.label}</Text>
+                <Text type="secondary">{option.desc}</Text>
+              </Space>
+            </Card>
+          ))}
+        </Space>
+      </Modal>
     </div>
   );
 }
-
-
 

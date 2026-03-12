@@ -48,18 +48,6 @@ body {
 .workbench-titlebar__center {
   justify-content: center;
 }
-
-.workbench-titlebar__workbook {
-  max-width: 380px;
-}
-
-.workbench-titlebar__workbook .ant-typography {
-  max-width: 340px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .workbench-titlebar__right {
   justify-self: end;
   display: flex;
@@ -79,13 +67,54 @@ body {
 }
 
 .workbench-titlebar__toggle,
-.workbench-titlebar__primary {
+.workbench-titlebar__menu-btn {
   border-radius: 4px;
 }
 
+.workbench-titlebar__menu-label {
+  display: inline-block;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
 
+.workbench-menu__recent-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 
+.workbench-menu__recent-name {
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
+.workbench-menu__recent-path {
+  font-size: 12px;
+  opacity: 0.75;
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workbench-theme-card {
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+
+.workbench-theme-card:hover {
+  border-color: #3f7eff;
+}
+
+.workbench-theme-card--active {
+  border-color: #3f7eff;
+  background: rgba(63, 126, 255, 0.08);
+}
 
 .workbench-window-controls.ant-space {
   gap: 0 !important;
@@ -95,7 +124,6 @@ body {
   width: 44px;
   height: 38px;
   border-radius: 0;
-  
 }
 
 .workbench-window-controls__btn.ant-btn:hover {

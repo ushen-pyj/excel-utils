@@ -1,14 +1,30 @@
 "use client";
 
 import { App as AntApp, ConfigProvider, theme as antdTheme } from "antd";
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { WorkbenchContextProvider } from "./WorkbenchContext";
 import { ThemeMode, WorkbenchShell } from "./WorkbenchShell";
+import { persistThemeMode, readThemeMode } from "./themeStore";
 import { useExcelWorkbench } from "./useExcelWorkbench";
 
 export function WorkbenchRoot({ children }: { children: ReactNode }) {
   const workbench = useExcelWorkbench();
   const [themeMode, setThemeMode] = useState<ThemeMode>("default");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      const savedTheme = await readThemeMode();
+      if (!cancelled && savedTheme) {
+        setThemeMode(savedTheme);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const themeAlgorithm = useMemo(() => {
     if (themeMode === "dark") return antdTheme.darkAlgorithm;
@@ -19,6 +35,11 @@ export function WorkbenchRoot({ children }: { children: ReactNode }) {
 
   const isDark = themeMode === "dark" || themeMode === "dark-compact";
 
+  function handleThemeModeChange(mode: ThemeMode) {
+    setThemeMode(mode);
+    void persistThemeMode(mode);
+  }
+
   return (
     <ConfigProvider theme={{ algorithm: themeAlgorithm }}>
       <AntApp>
@@ -28,9 +49,11 @@ export function WorkbenchRoot({ children }: { children: ReactNode }) {
             onNavigate={workbench.setActiveView}
             workbookInfo={workbench.workbookInfo}
             onOpenWorkbook={workbench.openWorkbook}
+            onOpenRecentWorkbook={workbench.openRecentWorkbook}
+            recentWorkbooks={workbench.recentWorkbooks}
             stats={workbench.stats}
             themeMode={themeMode}
-            onThemeModeChange={setThemeMode}
+            onThemeModeChange={handleThemeModeChange}
             isDark={isDark}
             status={workbench.status}
             isOpenWorkbookPending={workbench.isPending("openWorkbook")}

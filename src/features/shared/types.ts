@@ -1,4 +1,4 @@
-export type TableInput = {
+﻿export type TableInput = {
   raw: string;
   delimiter: string;
   hasHeader: boolean;
@@ -63,6 +63,12 @@ export type WorkbookInfo = {
   fileName: string;
   kind: string;
   sheets: WorkbookSheet[];
+};
+
+export type RecentWorkbookEntry = {
+  path: string;
+  fileName: string;
+  lastOpenedAt: number;
 };
 
 export type ExportResult = {
