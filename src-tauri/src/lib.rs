@@ -1,4 +1,4 @@
-﻿use calamine::{open_workbook_auto, Reader};
+use calamine::{open_workbook_auto, Reader};
 use csv::{ReaderBuilder, WriterBuilder};
 use rust_xlsxwriter::Workbook;
 use serde::{Deserialize, Serialize};
@@ -471,3 +471,7 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests;
+
