@@ -1,0 +1,115 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - name: Check out sources and submodules
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Check version tag
+        shell: pwsh
+        run: |
+          $version = (Get-Content -Raw VERSION).Trim()
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -cne "v$version") {
+            throw "Tag $env:GITHUB_REF_NAME must match v$version from VERSION."
+          }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Download Windows build dependencies
+        id: dependencies
+        shell: pwsh
+        run: |
+          function Get-VerifiedDownload($Uri, $Path, $Sha256) {
+            curl.exe --fail --location --proto '=https' --retry 3 --silent --show-error --output $Path $Uri
+            if ($LASTEXITCODE -ne 0) { throw "Download failed: $Uri" }
+            if ((Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash -ne $Sha256) {
+              throw "SHA-256 mismatch: $Path"
+            }
+          }
+
+          $qtArchive = Join-Path $env:RUNNER_TEMP 'qtbase-5.15.2.7z'
+          $qtUrl = 'https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt5_5152/qt.qt5.5152.win64_msvc2019_64/5.15.2-0-202011130602qtbase-Windows-Windows_10-MSVC2019-Windows-Windows_10-X86_64.7z'
+          Get-VerifiedDownload $qtUrl $qtArchive 'e563de40230295841c2eece26e347de709edc4bf035515cc239cae3c994c9af6'
+          $qtRoot = Join-Path $env:RUNNER_TEMP 'qt-sdk'
+          & "$env:ProgramFiles/7-Zip/7z.exe" x $qtArchive "-o$qtRoot" -bso0 -bsp0
+          if ($LASTEXITCODE -ne 0) { throw 'Qt SDK extraction failed.' }
+          $qtDir = Join-Path $qtRoot '5.15.2/msvc2019_64'
+          if (!(Test-Path "$qtDir/lib/cmake/Qt5/Qt5Config.cmake")) { throw 'Qt SDK path is missing.' }
+
+          $officeArchive = Join-Path $env:RUNNER_TEMP 'DesktopEditors_x64.zip'
+          $officeUrl = 'https://github.com/ONLYOFFICE/DesktopEditors/releases/download/v10.0.0/DesktopEditors_x64.zip'
+          Get-VerifiedDownload $officeUrl $officeArchive '54979d04f1cdca56deb0c62e0356355a45f392cdb54f04f6b7e436b1f44c3605'
+          $officeRoot = (New-Item -ItemType Directory (Join-Path $env:RUNNER_TEMP 'onlyoffice')).FullName
+          tar.exe -xf $officeArchive -C $officeRoot
+          if ($LASTEXITCODE -ne 0) { throw 'ONLYOFFICE runtime extraction failed.' }
+          $runtime = @(Get-ChildItem -LiteralPath $officeRoot -Recurse -File -Filter ascdocumentscore.dll)
+          if ($runtime.Count -ne 1) { throw 'Could not locate the ONLYOFFICE runtime directory.' }
+          "qt-dir=$qtDir" >> $env:GITHUB_OUTPUT
+          "runtime=$($runtime[0].DirectoryName)" >> $env:GITHUB_OUTPUT
+
+      - name: Build Windows application
+        shell: pwsh
+        env:
+          QT_DIR: ${{ steps.dependencies.outputs.qt-dir }}
+          ONLYOFFICE_RUNTIME: ${{ steps.dependencies.outputs.runtime }}
+        run: ./scripts/build.ps1 -QtDir $env:QT_DIR -Runtime $env:ONLYOFFICE_RUNTIME -ReleaseRepository $env:GITHUB_REPOSITORY
+
+      - name: Run workbook and finance tests
+        run: node --test tests/finance-tools.mjs tests/header-merge.mjs tests/header-styles.mjs tests/research-tools.mjs tests/workspace-search.mjs
+
+      - name: Package installer and update manifest
+        run: ./scripts/package-release.ps1 -OutputDirectory ./dist/release
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: ExcelUtils-Windows-x64
+          path: dist/release/*
+          if-no-files-found: error
+          compression-level: 0
+
+  publish:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows package
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ExcelUtils-Windows-x64
+          path: release
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes \
+            release/ExcelUtils-Setup-x64.exe release/update.json

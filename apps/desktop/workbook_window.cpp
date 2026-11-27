@@ -1,4 +1,5 @@
 #include "workbook_window.h"
+#include "app_update.h"
 #include "workspace_search.h"
 #include "workspace_ui.h"
 #include <OfficeFileFormats.h>
@@ -192,6 +193,8 @@ void WorkbookWindow::openThemeSettings(const QPoint& anchorGlobal) {
     }
     auto* dialog = new ExcelUi::ThemeSettingsDialog([this](bool dark, const QString& accent) {
         applyTheme(dark, accent, true);
+    }, [this] {
+        QTimer::singleShot(0, this, &WorkbookWindow::checkForAppUpdate);
     }, this);
     themeDialog_ = dialog;
     connect(dialog, &QDialog::finished, this, [this] { themeDialog_ = nullptr; });
@@ -202,6 +205,17 @@ void WorkbookWindow::openThemeSettings(const QPoint& anchorGlobal) {
         anchor = mapToGlobal(QPoint(qRound(74 * s), height() - qRound(16 * s)));
     }
     dialog->popupNear(anchor);
+}
+
+void WorkbookWindow::checkForAppUpdate() {
+    if (quitRequested_ || closing_) return;
+    const auto installer = downloadAppUpdate(this);
+    if (installer.isEmpty()) return;
+    const auto description = QStringLiteral("安装包已保存到下载目录。退出 Excel Utils 并打开安装器？");
+    if (QMessageBox::question(this, QStringLiteral("安装更新"), description,
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) return;
+    updateInstaller_ = installer;
+    close();
 }
 
 void WorkbookWindow::updateChromeScale() {
@@ -517,6 +531,7 @@ void WorkbookWindow::cancelClose() {
     closeState_ = CloseState::Idle;
     if (quitRequested_) tabs_.setEnabled(true);
     quitRequested_ = false;
+    updateInstaller_.clear();
     discardedOnQuit_.clear();
     if (books_.contains(closingBook_)) books_[closingBook_].widget->setEnabled(true);
     closingBook_ = -1;
@@ -559,7 +574,10 @@ void WorkbookWindow::askToCloseDuringExport() {
                 headerJob_->setProperty("cancelled", true);
                 headerJob_->requestInterruption();
             }
-        } else exportExit_ = ExportExit::Stay;
+        } else {
+            exportExit_ = ExportExit::Stay;
+            updateInstaller_.clear();
+        }
     });
     prompt->open();
 }
@@ -655,6 +673,7 @@ void WorkbookWindow::financeReply(const QString& command, const QJsonObject& pay
         if ((intent == ExportExit::AfterSave && type == "done" && !payload.value("path").toString().isEmpty()) ||
             (intent == ExportExit::AfterCancel && type == "cancelled"))
             QTimer::singleShot(0, this, [this] { close(); });
+        else updateInstaller_.clear();
     }
 }
 

@@ -7,6 +7,7 @@
 #include <QIcon>
 #include <QLockFile>
 #include <QMessageBox>
+#include <QProcess>
 #include <QStandardPaths>
 #include <qascapplicationmanager.h>
 
@@ -23,31 +24,8 @@ void traceLifecycle(const char* message, int viewId) {
                    QByteArray::number(viewId) + "\n");
 }
 
-int main(int argc, char** argv) {
-    QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-    QApplication::setAttribute(Qt::AA_Use96Dpi);
-    QApplication app(argc, argv);
-    app.setQuitOnLastWindowClosed(false);
-    app.setApplicationName("ExcelUtils");
-    app.setWindowIcon(QIcon(QStringLiteral(":/brand/excel-utils.ico")));
-    app.setOrganizationName("ExcelUtils");
-    app.setStyle("Fusion");
+static int runDesktop(QApplication& app, int argc, char** argv, const QString& profile, QString& updateInstaller) {
     const QString root = app.applicationDirPath();
-    const QString profile = qEnvironmentVariable("EXCELUTILS_PROFILE",
-        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
-    if (profile.isEmpty() || !QDir().mkpath(profile)) {
-        QMessageBox::critical(nullptr, "Excel Utils", QStringLiteral("无法创建配置目录。\n") + profile);
-        return 1;
-    }
-    QLockFile lock(profile + "/session.lock");
-    if (!lock.tryLock()) {
-        if (lock.error() == QLockFile::LockFailedError) {
-            QMessageBox::information(nullptr, "Excel Utils", QStringLiteral("此配置目录已有一个客户端正在运行。"));
-        } else {
-            QMessageBox::critical(nullptr, "Excel Utils", QStringLiteral("无法写入配置目录。\n") + profile);
-        }
-        return 1;
-    }
     CApplicationCEF::Prepare(argc, argv);
     CApplicationCEF cef;
     QAscApplicationManager manager;
@@ -87,5 +65,40 @@ int main(int argc, char** argv) {
     manager.CloseApplication();
     manager.SetEventListener(nullptr);
     traceLifecycle("completed SDK shutdown");
+    updateInstaller = window.updateInstaller();
+    return result;
+}
+
+int main(int argc, char** argv) {
+    QApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+    QApplication::setAttribute(Qt::AA_Use96Dpi);
+    QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
+    app.setApplicationName("ExcelUtils");
+    app.setApplicationVersion(QStringLiteral(EXCELUTILS_VERSION));
+    app.setWindowIcon(QIcon(QStringLiteral(":/brand/excel-utils.ico")));
+    app.setOrganizationName("ExcelUtils");
+    app.setStyle("Fusion");
+    const QString profile = qEnvironmentVariable("EXCELUTILS_PROFILE",
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation));
+    if (profile.isEmpty() || !QDir().mkpath(profile)) {
+        QMessageBox::critical(nullptr, "Excel Utils", QStringLiteral("无法创建配置目录。\n") + profile);
+        return 1;
+    }
+    QLockFile lock(profile + "/session.lock");
+    if (!lock.tryLock()) {
+        if (lock.error() == QLockFile::LockFailedError) {
+            QMessageBox::information(nullptr, "Excel Utils", QStringLiteral("此配置目录已有一个客户端正在运行。"));
+        } else {
+            QMessageBox::critical(nullptr, "Excel Utils", QStringLiteral("无法写入配置目录。\n") + profile);
+        }
+        return 1;
+    }
+    QString updateInstaller;
+    const int result = runDesktop(app, argc, argv, profile, updateInstaller);
+    if (!updateInstaller.isEmpty() && !QProcess::startDetached(updateInstaller, {})) {
+        QMessageBox::warning(nullptr, QStringLiteral("安装更新"),
+                             QStringLiteral("无法启动安装器，请手动打开以下文件。\n%1").arg(QDir::toNativeSeparators(updateInstaller)));
+    }
     return result;
 }

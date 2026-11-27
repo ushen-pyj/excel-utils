@@ -1676,12 +1676,12 @@ private:
     QVariantAnimation* hoverAnim_ = nullptr;
 };
 
-ThemeSettingsDialog::ThemeSettingsDialog(OnThemeChanged onChanged, QWidget* parent)
+ThemeSettingsDialog::ThemeSettingsDialog(OnThemeChanged onChanged, std::function<void()> onCheckUpdate, QWidget* parent)
     : QDialog(parent, Qt::Tool | Qt::FramelessWindowHint), onChanged_(std::move(onChanged)) {
     setAttribute(Qt::WA_DeleteOnClose);
     setAttribute(Qt::WA_TranslucentBackground);
     setObjectName("themeSettingsDialog");
-    setWindowTitle(QStringLiteral("外观设置"));
+    setWindowTitle(QStringLiteral("设置"));
 
     const double s = scaleFor(this);
     const int shadowPad = qRound(18 * s);
@@ -1707,7 +1707,7 @@ ThemeSettingsDialog::ThemeSettingsDialog(OnThemeChanged onChanged, QWidget* pare
     header->setSpacing(8);
     auto* titleCol = new QVBoxLayout;
     titleCol->setSpacing(2);
-    auto* title = new QLabel(QStringLiteral("外观设置"), card);
+    auto* title = new QLabel(QStringLiteral("设置"), card);
     title->setObjectName("settingsTitle");
     auto* sub = new QLabel(QStringLiteral("外观模式与主题色实时生效"), card);
     sub->setObjectName("settingsSubtitle");
@@ -1800,12 +1800,24 @@ ThemeSettingsDialog::ThemeSettingsDialog(OnThemeChanged onChanged, QWidget* pare
         if (onChanged_) onChanged_(false, QStringLiteral("emerald"));
         syncFromTheme();
     });
-    auto* escHint = new QLabel(QStringLiteral("Esc 关闭"), card);
-    escHint->setObjectName("settingsHint");
     footer->addWidget(resetBtn);
     footer->addStretch(1);
-    footer->addWidget(escHint);
     layout->addLayout(footer);
+
+    auto* updateRow = new QHBoxLayout;
+    auto* versionLabel = new QLabel(QStringLiteral("版本 %1").arg(QCoreApplication::applicationVersion()), card);
+    versionLabel->setObjectName("settingsHint");
+    auto* updateBtn = new QPushButton(QStringLiteral("检查更新"), card);
+    updateBtn->setObjectName("settingsResetBtn");
+    updateBtn->setCursor(Qt::PointingHandCursor);
+    connect(updateBtn, &QPushButton::clicked, this, [this, onCheckUpdate] {
+        onCheckUpdate();
+        accept();
+    });
+    updateRow->addWidget(versionLabel);
+    updateRow->addStretch(1);
+    updateRow->addWidget(updateBtn);
+    layout->addLayout(updateRow);
 
     syncFromTheme();
     adjustSize();

@@ -300,7 +300,7 @@ private:
 class ThemeSettingsDialog final : public QDialog {
 public:
     using OnThemeChanged = std::function<void(bool dark, const QString& accent)>;
-    ThemeSettingsDialog(OnThemeChanged onChanged, QWidget* parent = nullptr);
+    ThemeSettingsDialog(OnThemeChanged onChanged, std::function<void()> onCheckUpdate, QWidget* parent = nullptr);
     void popupNear(const QPoint& globalBottomLeft);
     void syncFromTheme();
 

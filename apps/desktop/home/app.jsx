@@ -145,7 +145,7 @@ function Shell(props) {
       </nav>
       <div class="sidebar-footer">
         <button type="button" class="sidebar-settings-btn" onClick={() => command("app:settings", {})}
-          title="外观与主题色设置" aria-label="外观设置">
+          title="设置" aria-label="设置">
           <NavIcon name="settings" />
           <span class="text">设置</span>
         </button>

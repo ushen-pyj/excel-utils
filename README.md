@@ -4,7 +4,9 @@ Excel Utils 是一个离线使用的 Windows x64 客户端。左侧 **主页** �
 
 ## 安装与使用
 
-运行 `dist/ExcelUtils-Setup-x64.exe` 安装，或直接运行完整发布目录中的 `dist/ExcelUtils/ExcelUtils.exe`。可移动分发时请复制整个 `ExcelUtils` 目录。安装包内置 Qt、CEF、表格编辑器及本地转换器。用户无需另装 ONLYOFFICE、Excel 或 Node.js。
+运行 `dist/ExcelUtils-Setup-x64.exe` 安装，或直接运行完整发布目录中的 `dist/ExcelUtils/ExcelUtils.exe`。可移动分发时请复制整个 `ExcelUtils` 目录。安装包内置 Qt、CEF、表格编辑器及本地转换器。用户无需另装 ONLYOFFICE、Excel 或 Node.js。[最新 Windows 安装包](https://github.com/ushen-pyj/excel-utils/releases/latest/download/ExcelUtils-Setup-x64.exe)
+
+在 **设置 → 检查更新** 可以获取新版。客户端在下载完成后校验安装包的大小和 SHA-256。确认安装后，客户端先按正常退出流程处理未保存的工作簿，再打开安装器。也可以从下载目录手动运行已下载的安装包。
 
 1. 点 **打开**，首次使用时点 **打开文件**，已有最近文件夹时点 **浏览**，选一份本地 `.xlsx`。也可以从主页最近文件列表打开工作簿。
 2. 编辑单元格，按回车提交输入。点编辑器的保存按钮或按 `Ctrl+S` 写回原文件。
@@ -105,10 +107,21 @@ git submodule update --init --depth 1
 ./scripts/build.ps1 -QtDir 'C:/Qt/5.15.2/msvc2019_64' -Runtime 'C:/Program Files/ONLYOFFICE/DesktopEditors'
 node --test ./tests/finance-tools.mjs ./tests/header-merge.mjs ./tests/research-tools.mjs
 ./tests/verify.ps1 -Runtime ./dist/ExcelUtils
-ISCC.exe ./packaging/windows/ExcelUtils.iss
+./scripts/package-release.ps1
 ```
 
 `scripts/build.ps1` 调用 MSVC 和 CMake 编译客户端、用 npm 锁文件构建首页，并生成 `dist/ExcelUtils/`。`-NativeOnly` 适用于已有完整运行目录时迭代 C++。`packaging/windows/ExcelUtils.iss` 将运行目录和许可说明打成单个离线安装器。随包的 `NOTICE.txt`、`ONLYOFFICE-LICENSE.txt` 和第三方许可文件说明组件来源。[ONLYOFFICE 发布版许可证](https://github.com/ONLYOFFICE/DesktopEditors/blob/v10.0.0/LICENSE) · [Qt 开源许可说明](https://www.qt.io/development/open-source-lgpl-obligations)
+
+### GitHub Releases
+
+在 GitHub 的 **Actions → Windows Release** 手动运行可下载测试安装包。正式发布时，先提交 `VERSION` 中的新版本号及本次改动，再创建并推送同名标签。例如 `VERSION` 为 `0.1.4` 时运行以下命令。
+
+```powershell
+git tag v0.1.4
+git push origin v0.1.4
+```
+
+工作流在 Windows 编译并测试应用，将 `ExcelUtils-Setup-x64.exe` 和 `update.json` 一起上传到 GitHub Release。`VERSION` 同时用于客户端和安装器，每次发布请递增。更新入口读取公开 Release 资产，无需 GitHub 令牌。更新会下载完整的 x64 安装包。[GitHub Release 下载链接说明](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases)
 
 ## 验收方式
 

@@ -47,6 +47,7 @@ public:
     void showWorkspace(const QString& initialRoot = {});
     void restoreWorkspaceOnStartup();
     void OnEvent(NSEditorApi::CAscCefMenuEvent* event) override;
+    QString updateInstaller() const { return closing_ ? updateInstaller_ : QString(); }
 protected:
     void closeEvent(QCloseEvent* event) override;
     void changeEvent(QEvent* event) override;
@@ -59,6 +60,8 @@ private:
     void syncHomeTheme();
     void updateCaptionIcons();
     void openThemeSettings(const QPoint& anchorGlobal = {});
+    void checkForAppUpdate();
+    QString updateInstaller_;
     void updateChromeScale();
     bool isCaptionSpace(const QPoint& position) const;
     void toggleMaximized();

@@ -171,8 +171,8 @@ void WorkbookWindow::showWorkspace(const QString& initialRoot) {
     auto* settingsBtn = new QToolButton(workspaceRail_);
     settingsBtn->setObjectName("railSettingsBtn");
     settingsBtn->setCursor(Qt::PointingHandCursor);
-    settingsBtn->setAccessibleName(QStringLiteral("外观设置"));
-    settingsBtn->setToolTip(QStringLiteral("外观与主题色设置"));
+    settingsBtn->setAccessibleName(QStringLiteral("设置"));
+    settingsBtn->setToolTip(QStringLiteral("设置"));
     connect(settingsBtn, &QToolButton::clicked, this, [this, settingsBtn] {
         const QPoint anchor = settingsBtn->mapToGlobal(QPoint(settingsBtn->width() + ExcelUi::scaled(this, 10), settingsBtn->height()));
         openThemeSettings(anchor);
