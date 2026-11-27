@@ -1,0 +1,25 @@
+#include <winver.h>
+
+1 ICON "excel-utils.ico"
+
+1 VERSIONINFO
+ FILEVERSION EXCELUTILS_FILE_VERSION
+ PRODUCTVERSION EXCELUTILS_FILE_VERSION
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "Excel Utils"
+            VALUE "FileVersion", EXCELUTILS_VERSION
+            VALUE "ProductName", "Excel Utils"
+            VALUE "ProductVersion", EXCELUTILS_VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END

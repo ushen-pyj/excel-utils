@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="/window-chrome">
+    <file alias="chrome.qss">window_chrome.qss</file>
+    <file alias="files.svg">icons/files.svg</file>
+    <file alias="tools.svg">icons/tools.svg</file>
+    <file alias="files-active.svg">icons/files-active.svg</file>
+    <file alias="search.svg">icons/search.svg</file>
+    <file alias="search-active.svg">icons/search-active.svg</file>
+    <file alias="new-file.svg">icons/new-file.svg</file>
+    <file alias="refresh.svg">icons/refresh.svg</file>
+    <file alias="collapse.svg">icons/collapse.svg</file>
+    <file alias="chevron-down.svg">icons/chevron-down.svg</file>
+    <file alias="chevron-right.svg">icons/chevron-right.svg</file>
+    <file alias="folder.svg">icons/folder.svg</file>
+    <file alias="folder-open.svg">icons/folder-open.svg</file>
+    <file alias="folder-outline.svg">icons/folder-outline.svg</file>
+    <file alias="xlsx-file.svg">icons/xlsx-file.svg</file>
+    <file alias="sidebar-toggle.svg">icons/sidebar-toggle.svg</file>
+    <file alias="settings.svg">icons/settings.svg</file>
+    <file alias="sun.svg">icons/sun.svg</file>
+    <file alias="moon.svg">icons/moon.svg</file>
+    <file alias="minimize.svg">../../third_party/desktop-apps/win-linux/res/icons/title/minimize.svg</file>
+    <file alias="maximize.svg">../../third_party/desktop-apps/win-linux/res/icons/title/restore.svg</file>
+    <file alias="restore.svg">../../third_party/desktop-apps/win-linux/res/icons/title/maximize.svg</file>
+    <file alias="close.svg">../../third_party/desktop-apps/win-linux/res/icons/title/close.svg</file>
+    <file alias="close-white.svg">../../third_party/desktop-apps/win-linux/res/icons/title/close_light.svg</file>
+    <file alias="spreadsheet.svg">../../third_party/desktop-apps/win-linux/res/icons/tabbar/tabicon_se_normal.svg</file>
+    <file alias="tab-close.svg">../../third_party/desktop-apps/win-linux/res/icons/tabbar/tab_close_normal_dark.svg</file>
+  </qresource>
+</RCC>

@@ -1,0 +1,11 @@
+Excel Utils Windows 桌面原型
+
+本产品基于 Ascensio System SIA 开发的 ONLYOFFICE Desktop Editors 10.0.0。Excel Utils 于 2026 年 11 月 26 日修改了 Qt 客户端、启动导航、窗口外观和应用图标。下方附有原项目许可证及附加条款。
+
+ONLYOFFICE 引擎和桌面组件的许可证及附加条款见 ONLYOFFICE-LICENSE.txt。运行时的版权与第三方组件许可（包括 Qt、CEF 等）见 LICENSE.txt 和 3DPARTYLICENSE.txt。字体的许可信息见 fonts 目录。
+
+财务工具页使用 SheetJS Community Edition 0.20.3 读写 XLSX，许可见 SheetJS-LICENSE.txt。
+后台校验公式使用 saxes 与 xmlchars，许可见 saxes-LICENSE.txt 和 xmlchars-LICENSE.txt。
+导出表头样式使用 @xmldom/xmldom，许可见 xmldom-LICENSE.txt。
+
+本项目对应版本的源代码包含 apps、scripts、packaging 和固定提交的 Git 子模块。原始上游版本为 https://github.com/ONLYOFFICE/DesktopEditors/releases/tag/v10.0.0 。

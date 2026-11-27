@@ -1,0 +1,750 @@
+/* Dynamic Light/Dark & Accent Themeable Qt Chrome, Workspace & Settings Popover */
+
+/* ── Global Native Polish (Tooltips, Scrollbars, MessageBoxes, Menus) ── */
+QMainWindow {
+    background-color: {{bg_chrome}};
+}
+QToolTip {
+    background-color: {{tooltip_bg}};
+    color: {{tooltip_fg}};
+    border: 1px solid {{tooltip_border}};
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 12px;
+}
+
+QMenu {
+    background-color: {{bg_card}};
+    color: {{text_body}};
+    border: 1px solid {{border_control}};
+    border-radius: 8px;
+    padding: 5px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 13px;
+}
+QMenu::item {
+    padding: 6px 26px 6px 12px;
+    border-radius: 5px;
+    margin: 1px 0;
+}
+QMenu::item:selected {
+    background-color: {{accent_soft}};
+    color: {{accent_text}};
+}
+QMenu::item:disabled {
+    color: {{text_faint}};
+    background-color: transparent;
+}
+QMenu::separator {
+    height: 1px;
+    background-color: {{border}};
+    margin: 4px 8px;
+}
+
+QMessageBox {
+    background-color: {{bg_card}};
+    color: {{text_body}};
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 13px;
+}
+QMessageBox QLabel {
+    color: {{text_body}};
+    font-size: 13px;
+}
+QMessageBox QPushButton {
+    min-width: 82px;
+    min-height: 30px;
+    padding: 4px 16px;
+    border: 1px solid {{border_control}};
+    border-radius: 6px;
+    background-color: {{bg_surface}};
+    color: {{text_body}};
+    font-size: 13px;
+}
+QMessageBox QPushButton:hover {
+    background-color: {{bg_hover}};
+    border-color: {{accent_border}};
+}
+QMessageBox QPushButton:default {
+    background-color: {{accent}};
+    border-color: {{accent}};
+    color: {{btn_on_accent}};
+    font-weight: 600;
+}
+QMessageBox QPushButton:default:hover {
+    background-color: {{accent_hover}};
+    border-color: {{accent_hover}};
+}
+
+/* Crisp thin overlay-feel scrollbars */
+QScrollBar:vertical {
+    background: transparent;
+    width: 9px;
+    margin: 2px 0;
+}
+QScrollBar::handle:vertical {
+    background: {{scroll_thumb}};
+    min-height: 32px;
+    border-radius: 4px;
+    margin: 0 2px;
+}
+QScrollBar::handle:vertical:hover {
+    background: {{scroll_thumb_hover}};
+}
+QScrollBar::handle:vertical:pressed {
+    background: {{accent}};
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+    height: 0;
+    border: none;
+}
+QScrollBar:horizontal {
+    background: transparent;
+    height: 9px;
+    margin: 0 2px;
+}
+QScrollBar::handle:horizontal {
+    background: {{scroll_thumb}};
+    min-width: 32px;
+    border-radius: 4px;
+    margin: 2px 0;
+}
+QScrollBar::handle:horizontal:hover {
+    background: {{scroll_thumb_hover}};
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+    width: 0;
+    border: none;
+}
+
+/* ── Top-Level Window Chrome & Elevated Rounded Title Tabs ── */
+QTabWidget#workbookTabs,
+QTabBar#workbookTabBar,
+QWidget#captionControls {
+    background-color: {{bg_chrome}};
+}
+QTabWidget#workbookTabs::tab-bar {
+    left: 6px;
+}
+QTabWidget#workbookTabs::pane {
+    border: 0;
+    border-top: 1px solid {{border}};
+    padding: 0;
+    margin-top: -1px;
+    background-color: {{bg_surface}};
+}
+QTabBar#workbookTabBar::tab {
+    background-color: transparent;
+    color: {{text_secondary}};
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    width: 158px;
+    height: 31px;
+    margin: 5px 2px 0 0;
+    padding: 0 11px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 12px;
+}
+QTabBar#workbookTabBar::tab:first,
+QTabBar#workbookTabBar::tab:only-one {
+    width: 132px;
+    font-weight: 600;
+}
+QTabBar#workbookTabBar::tab:hover {
+    background-color: {{bg_hover}};
+    color: {{text_primary}};
+}
+QTabBar#workbookTabBar::tab:selected {
+    background-color: {{bg_toolbar}};
+    color: {{text_primary}};
+    border-color: {{border}};
+    font-weight: 600;
+}
+QTabBar#workbookTabBar::close-button {
+    image: url({{tab_close_icon}});
+    width: 16px;
+    height: 16px;
+    padding: 2px;
+    border-radius: 4px;
+}
+QTabBar#workbookTabBar::close-button:hover {
+    background-color: {{close_hover_bg}};
+}
+
+/* Windows 11 Caption Controls */
+QWidget#captionControls QToolButton {
+    background-color: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 46px;
+    max-width: 46px;
+    min-height: 37px;
+    max-height: 37px;
+}
+QWidget#captionControls QToolButton:hover {
+    background-color: {{caption_hover}};
+}
+QWidget#captionControls QToolButton:pressed {
+    background-color: {{caption_pressed}};
+}
+QWidget#captionControls QToolButton#windowClose:hover,
+QWidget#captionControls QToolButton#windowClose:pressed {
+    background-color: #d92d20;
+}
+
+/* ── Workspace Workbench Page ── */
+QWidget#workspacePage {
+    background-color: {{bg_surface}};
+    color: {{text_body}};
+}
+QWidget#workspacePage QLabel,
+QWidget#workspacePage QAbstractItemView,
+QWidget#workspacePage QLineEdit,
+QWidget#workspacePage QPushButton,
+QWidget#workspacePage QComboBox,
+QWidget#workspacePage QToolButton,
+QWidget#workspacePage QTabBar {
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+/* Top Workspace Command Bar */
+QWidget#workspaceToolbar {
+    background-color: {{bg_toolbar}};
+    border-bottom: 1px solid {{border}};
+}
+QWidget#workspaceToolbar QComboBox {
+    border: 1px solid {{border_control}};
+    border-radius: 7px;
+    background-color: {{bg_input}};
+    color: {{text_primary}};
+    padding: 4px 28px 4px 10px;
+    min-height: 24px;
+    font-size: 12px;
+    font-weight: 600;
+}
+QWidget#workspaceToolbar QComboBox:hover {
+    border-color: {{accent_border}};
+    background-color: {{bg_surface}};
+}
+QWidget#workspaceToolbar QComboBox:focus {
+    border-color: {{accent}};
+    background-color: {{bg_surface}};
+}
+QWidget#workspaceToolbar QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 24px;
+    border: 0;
+    background: transparent;
+}
+QWidget#workspaceToolbar QComboBox::down-arrow {
+    image: url(:/window-chrome/chevron-down.svg);
+    width: 12px;
+    height: 12px;
+}
+QWidget#workspaceToolbar QComboBox QAbstractItemView {
+    background-color: {{bg_card}};
+    color: {{text_body}};
+    border: 1px solid {{border_control}};
+    border-radius: 8px;
+    padding: 4px;
+    outline: 0;
+    selection-background-color: {{accent_soft}};
+    selection-color: {{accent_text}};
+}
+QWidget#workspaceToolbar QComboBox QAbstractItemView::item {
+    min-height: 28px;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+
+/* Ghost Action Button in Workspace Toolbar */
+QWidget#workspaceToolbar QPushButton#workspaceActionBtn {
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background-color: transparent;
+    color: {{text_secondary}};
+    padding: 4px 10px;
+    min-height: 24px;
+    font-size: 12px;
+    font-weight: 500;
+}
+QWidget#workspaceToolbar QPushButton#workspaceActionBtn:hover {
+    background-color: {{bg_hover}};
+    border-color: {{border}};
+    color: {{text_primary}};
+}
+QWidget#workspaceToolbar QPushButton#workspaceActionBtn:pressed {
+    background-color: {{bg_selected}};
+}
+QWidget#workspaceToolbar QPushButton#workspaceActionBtn:focus {
+    border-color: {{accent}};
+}
+
+/* Prominent Accent-Tinted Finance Tools Pill */
+QToolButton#workspaceToolsButton {
+    border: 1px solid {{accent_border}};
+    border-radius: 7px;
+    background-color: {{accent_soft}};
+    color: {{accent_text}};
+    padding: 4px 12px;
+    min-height: 24px;
+    font-size: 12px;
+    font-weight: 600;
+}
+QToolButton#workspaceToolsButton:hover {
+    background-color: {{accent_soft_hover}};
+    border-color: {{accent}};
+}
+QToolButton#workspaceToolsButton:pressed {
+    background-color: {{accent_soft_hover}};
+    border-color: {{accent}};
+}
+QToolButton#workspaceToolsButton:disabled {
+    background-color: {{bg_statusbar}};
+    border-color: {{border}};
+    color: {{text_faint}};
+}
+QToolButton#workspaceToolsButton:focus {
+    border-color: {{accent}};
+}
+QToolButton#workspaceToolsButton::menu-indicator {
+    image: none;
+    width: 0;
+}
+
+/* Animated Activity Bar (Squircle Buttons + Gliding Accent Indicator) */
+QWidget#workspaceRail QToolButton#railNavBtn,
+QWidget#workspaceRail QToolButton#railToggleBtn,
+QWidget#workspaceRail QToolButton#railSettingsBtn {
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    padding: 0;
+}
+QWidget#workspaceRail QToolButton#railNavBtn:hover,
+QWidget#workspaceRail QToolButton#railToggleBtn:hover,
+QWidget#workspaceRail QToolButton#railSettingsBtn:hover {
+    background-color: {{bg_hover}};
+}
+QWidget#workspaceRail QToolButton#railNavBtn:checked {
+    background-color: {{accent_soft}};
+    border-color: {{accent_border}};
+}
+QWidget#workspaceRail QToolButton#railNavBtn:focus,
+QWidget#workspaceRail QToolButton#railToggleBtn:focus,
+QWidget#workspaceRail QToolButton#railSettingsBtn:focus {
+    border-color: {{accent}};
+}
+
+/* Splitter Sash with Smooth Accent Hover Highlight */
+QSplitter#workspaceSplitter::handle {
+    background-color: {{border}};
+    width: 1px;
+}
+QSplitter#workspaceSplitter::handle:hover {
+    background-color: {{accent}};
+    width: 3px;
+}
+
+/* Workspace Side Bar (Explorer & Search) */
+QWidget#workspaceSidebar {
+    background-color: {{bg_sidebar}};
+}
+QWidget#workspaceSidebar QLabel#workspaceRootName {
+    color: {{text_primary}};
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 2px;
+}
+QWidget#workspaceSidebar QLabel#searchStatus {
+    color: {{text_muted}};
+    font-size: 11px;
+    padding: 1px 2px;
+}
+QWidget#workspaceSidebar QLabel#newFileDest {
+    color: {{text_secondary}};
+    font-size: 11px;
+    font-weight: 600;
+}
+QWidget#workspaceSidebar QLabel#newFileError {
+    color: {{danger}};
+    font-size: 12px;
+}
+QWidget#workspaceSidebar QWidget#newWorkbookForm {
+    background-color: {{bg_card}};
+    border: 1px solid {{accent_border}};
+    border-radius: 8px;
+}
+QWidget#workspaceSidebar QToolButton {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 4px;
+    min-width: 24px;
+    min-height: 24px;
+    background: transparent;
+}
+QWidget#workspaceSidebar QToolButton:hover {
+    background-color: {{bg_hover}};
+}
+QWidget#workspaceSidebar QToolButton:pressed {
+    background-color: {{bg_selected}};
+}
+QWidget#workspaceSidebar QToolButton:focus {
+    border-color: {{accent}};
+}
+QWidget#workspaceSidebar QToolButton#workspaceRegexToggle:checked {
+    background-color: {{accent_soft}};
+    border-color: {{accent_border}};
+    color: {{accent_text}};
+}
+QWidget#workspaceSidebar QToolButton#workspaceRegexToggle:checked:focus {
+    border-color: {{accent}};
+}
+QWidget#workspaceSidebar QLineEdit {
+    padding: 6px 9px;
+    background-color: {{bg_input}};
+    color: {{text_primary}};
+    border: 1px solid {{border_control}};
+    border-radius: 7px;
+    font-size: 12px;
+    selection-background-color: {{accent_soft_hover}};
+    selection-color: {{accent_text}};
+}
+QWidget#workspaceSidebar QLineEdit:hover {
+    border-color: {{accent_border}};
+}
+QWidget#workspaceSidebar QLineEdit:focus {
+    border-color: {{accent}};
+}
+QWidget#workspaceSidebar QLineEdit#explorerFilterInput {
+    background-color: {{bg_input}};
+    padding: 5px 9px;
+    font-size: 12px;
+}
+QWidget#workspaceSidebar QPushButton {
+    border: 1px solid {{border_control}};
+    border-radius: 6px;
+    background-color: {{bg_card}};
+    color: {{text_body}};
+    padding: 5px 10px;
+    min-height: 22px;
+    font-size: 12px;
+    font-weight: 500;
+}
+QWidget#workspaceSidebar QPushButton:hover {
+    background-color: {{accent_soft}};
+    border-color: {{accent_border}};
+    color: {{accent_text}};
+}
+QWidget#workspaceSidebar QPushButton:disabled {
+    background-color: {{bg_statusbar}};
+    border-color: {{border}};
+    color: {{text_faint}};
+}
+
+/* Explorer & Search Tree Views */
+QTreeView#workspaceFiles {
+    background-color: transparent;
+    border: 0;
+    padding: 2px 0;
+    font-size: 13px;
+    color: {{text_body}};
+    outline: 0;
+}
+QTreeView#workspaceFiles::item {
+    height: 30px;
+    border: 0;
+    background: transparent;
+}
+QTreeWidget#searchResultsTree {
+    background-color: transparent;
+    border: 0;
+    padding: 2px 0;
+    font-size: 12px;
+    color: {{text_body}};
+    outline: 0;
+}
+QTreeWidget#searchResultsTree::item {
+    border-radius: 6px;
+    padding: 0 4px;
+}
+QTreeWidget#searchResultsTree::item:hover {
+    background-color: {{bg_hover}};
+}
+QTreeWidget#searchResultsTree::item:selected {
+    background-color: {{accent_soft}};
+    color: {{accent_text}};
+}
+
+/* Workspace Editor Inner Tab Bar */
+QTabWidget#workspaceTabs::pane {
+    border: 0;
+    border-top: 1px solid {{border}};
+    margin-top: -1px;
+    background-color: {{bg_surface}};
+}
+QTabWidget#workspaceTabs > QTabBar {
+    background-color: {{bg_tabstrip}};
+    padding-left: 6px;
+}
+QTabWidget#workspaceTabs > QTabBar::tab {
+    background-color: transparent;
+    color: {{text_secondary}};
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    padding: 0 12px;
+    height: 30px;
+    min-width: 112px;
+    max-width: 240px;
+    margin: 4px 2px 0 0;
+    font-size: 12px;
+}
+QTabWidget#workspaceTabs > QTabBar::tab:hover {
+    background-color: {{bg_hover}};
+    color: {{text_primary}};
+}
+QTabWidget#workspaceTabs > QTabBar::tab:selected {
+    background-color: {{bg_surface}};
+    color: {{accent_text}};
+    border-color: {{border}};
+    border-top: 2px solid {{accent}};
+    font-weight: 600;
+}
+QTabWidget#workspaceTabs > QTabBar::close-button {
+    image: url({{tab_close_icon}});
+    width: 14px;
+    height: 14px;
+    padding: 2px;
+    border-radius: 4px;
+}
+QTabWidget#workspaceTabs > QTabBar::close-button:hover {
+    background-color: {{close_hover_bg}};
+}
+
+/* Workspace Welcome Canvas Widgets */
+QLabel#welcomeLogoBadge {
+    background-color: {{bg_card}};
+    border: 1px solid {{accent_border}};
+    border-radius: 16px;
+}
+QLabel#welcomeTitle {
+    color: {{text_primary}};
+    font-size: 20px;
+    font-weight: 700;
+}
+QLabel#welcomeSubtitle {
+    color: {{text_muted}};
+    font-size: 13px;
+}
+QPushButton#welcomePathChip {
+    background-color: {{bg_card}};
+    color: {{text_secondary}};
+    border: 1px solid {{border}};
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 11px;
+}
+QPushButton#welcomePathChip:hover {
+    background-color: {{accent_soft}};
+    border-color: {{accent_border}};
+    color: {{accent_text}};
+}
+QPushButton#welcomePrimaryCta {
+    background-color: {{accent}};
+    color: {{btn_on_accent}};
+    border: 1px solid {{accent}};
+    border-radius: 8px;
+    padding: 8px 20px;
+    min-height: 22px;
+    font-size: 13px;
+    font-weight: 600;
+}
+QPushButton#welcomePrimaryCta:hover {
+    background-color: {{accent_hover}};
+    border-color: {{accent_hover}};
+}
+QPushButton#welcomePrimaryCta:pressed {
+    background-color: {{accent_pressed}};
+}
+QPushButton#welcomeRecentChip {
+    background-color: {{bg_card}};
+    color: {{text_body}};
+    border: 1px solid {{border_control}};
+    border-radius: 14px;
+    padding: 4px 12px;
+    font-size: 12px;
+}
+QPushButton#welcomeRecentChip:hover {
+    background-color: {{accent_soft}};
+    border-color: {{accent_border}};
+    color: {{accent_text}};
+}
+
+/* Workspace Status Bar */
+QWidget#workspaceStatusBar {
+    background-color: {{bg_statusbar}};
+    border-top: 1px solid {{border}};
+    min-height: 26px;
+    max-height: 26px;
+}
+QLabel#statusLiveDot {
+    background-color: {{live_dot}};
+    border-radius: 4px;
+}
+QFrame#statusDivider {
+    color: {{border_control}};
+}
+QWidget#workspaceStatusBar QLabel {
+    color: {{text_muted}};
+    font-size: 11px;
+    padding: 0 2px;
+}
+QWidget#workspaceStatusBar QLabel#statusWorkspaceBadge {
+    color: {{accent_text}};
+    font-weight: 600;
+}
+QWidget#workspaceStatusBar QLabel#statusOpenCount {
+    color: {{text_secondary}};
+}
+QWidget#workspaceStatusBar QPushButton#statusShortcutBtn {
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    color: {{text_muted}};
+    font-size: 11px;
+    padding: 2px 7px;
+}
+QWidget#workspaceStatusBar QPushButton#statusShortcutBtn:hover {
+    background-color: {{bg_hover}};
+    color: {{text_primary}};
+}
+
+/* ── Quick Open Command Palette Dialog ── */
+QFrame#quickOpenCard {
+    background-color: {{bg_card}};
+    border: 1px solid {{border_control}};
+    border-radius: 12px;
+}
+QFrame#quickOpenCard QLineEdit#quickOpenInput {
+    background-color: transparent;
+    color: {{text_primary}};
+    border: 0;
+    padding: 6px 4px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 14px;
+    selection-background-color: {{accent_soft_hover}};
+    selection-color: {{accent_text}};
+}
+QFrame#quickOpenCard QListView#quickOpenResults {
+    background-color: transparent;
+    border: 0;
+    outline: 0;
+    padding: 2px 0;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 13px;
+}
+QFrame#quickOpenCard QFrame#quickOpenSep {
+    background-color: {{border}};
+    border: 0;
+    max-height: 1px;
+}
+QFrame#quickOpenCard QLabel#quickOpenStatus,
+QFrame#quickOpenCard QLabel#quickOpenHints {
+    color: {{text_muted}};
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 11px;
+}
+QFrame#quickOpenCard QToolButton#quickOpenClose {
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    padding: 4px;
+    min-width: 24px;
+    min-height: 24px;
+}
+QFrame#quickOpenCard QToolButton#quickOpenClose:hover {
+    background-color: {{bg_hover}};
+}
+
+/* ── Floating Appearance Settings Popover ── */
+QFrame#themeSettingsCard {
+    background-color: {{bg_card}};
+    border: 1px solid {{border_control}};
+    border-radius: 14px;
+}
+QFrame#themeSettingsCard QLabel#settingsTitle {
+    color: {{text_primary}};
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+QFrame#themeSettingsCard QLabel#settingsSubtitle {
+    color: {{text_muted}};
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 11px;
+}
+QFrame#themeSettingsCard QLabel#settingsSectionLabel {
+    color: {{text_secondary}};
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+QFrame#themeSettingsCard QLabel#settingsAccentBadge {
+    background-color: {{accent_soft}};
+    color: {{accent_text}};
+    border: 1px solid {{accent_border}};
+    border-radius: 9px;
+    padding: 2px 8px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+}
+QFrame#themeSettingsCard QToolButton#settingsCloseBtn {
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    padding: 4px;
+    min-width: 24px;
+    min-height: 24px;
+}
+QFrame#themeSettingsCard QToolButton#settingsCloseBtn:hover {
+    background-color: {{bg_hover}};
+}
+QFrame#themeSettingsCard QFrame#settingsSep {
+    background-color: {{border}};
+    border: 0;
+    max-height: 1px;
+}
+QFrame#themeSettingsCard QPushButton#settingsResetBtn {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: {{text_secondary}};
+    padding: 4px 10px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 12px;
+}
+QFrame#themeSettingsCard QPushButton#settingsResetBtn:hover {
+    background-color: {{bg_hover}};
+    color: {{text_primary}};
+}
+QFrame#themeSettingsCard QLabel#settingsHint {
+    color: {{text_faint}};
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 11px;
+}

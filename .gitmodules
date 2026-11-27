@@ -1,0 +1,20 @@
+[submodule "third_party/core"]
+	path = third_party/core
+	url = https://github.com/ONLYOFFICE/core.git
+	shallow = true
+[submodule "third_party/desktop-apps"]
+	path = third_party/desktop-apps
+	url = https://github.com/ONLYOFFICE/desktop-apps.git
+	shallow = true
+[submodule "third_party/desktop-sdk"]
+	path = third_party/desktop-sdk
+	url = https://github.com/ONLYOFFICE/desktop-sdk.git
+	shallow = true
+[submodule "third_party/sdkjs"]
+	path = third_party/sdkjs
+	url = https://github.com/ONLYOFFICE/sdkjs.git
+	shallow = true
+[submodule "third_party/web-apps"]
+	path = third_party/web-apps
+	url = https://github.com/ONLYOFFICE/web-apps.git
+	shallow = true

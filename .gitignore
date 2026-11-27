@@ -1,5 +1,3 @@
-node_modules/*
-dist/*
-out/*
-.next/*
-src-tauri/target/*
+/build/
+/dist/
+/outputs/finance-tools/

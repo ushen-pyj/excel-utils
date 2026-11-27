@@ -1,0 +1,137 @@
+/* Header Merge specific refinements aligned with dynamic theme tokens */
+
+.hm-source .hm-remove {
+  margin-left: auto;
+}
+
+.hm-sheet {
+  padding: 9px 0;
+  border-top: 1px solid var(--ft-line, #eef2f6);
+}
+
+.hm-sheet:first-of-type {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+.hm-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.hm-settings label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hm-settings .ft-sheet-name {
+  margin-right: 6px;
+  font-weight: 650;
+  color: var(--ft-heading, #0f172a);
+}
+
+.hm-settings input[type="number"] {
+  width: 68px;
+  min-height: 28px;
+  padding: 3px 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hm-settings input::placeholder {
+  font-size: 12px;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.hm-state,
+.hm-hint {
+  color: var(--ft-muted, #526071);
+  font-size: 12px;
+}
+
+.hm-state {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--ft-tint, #e7f5ed);
+  color: var(--ft-accent-text, #0b562e);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.hm-state.hm-warn,
+.ft-page .hm-issue {
+  color: #9a5b00;
+  background: #fff8eb;
+}
+
+.theme-dark .hm-state.hm-warn,
+.theme-dark .ft-page .hm-issue {
+  color: #fcd34d;
+  background: rgba(217, 119, 6, 0.16);
+}
+
+.ft-page .hm-issue {
+  margin: 8px 0 0;
+  padding: 9px 13px;
+  border: 1px solid #f3d19e;
+  border-left: 3.5px solid #d97706;
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+  font-size: 12.5px;
+}
+
+.theme-dark .ft-page .hm-issue {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.ft-page .hm-restore {
+  display: inline-block;
+  margin-top: 8px;
+  min-height: 26px;
+  padding: 3px 11px;
+  font-size: 12px;
+  background: var(--ft-card, #ffffff);
+  border-color: #d9a75a;
+  color: #854d0e;
+}
+
+.theme-dark .ft-page .hm-restore {
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.ft-page .hm-restore:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: #c28529;
+}
+
+.hm-sources-heading h2 span {
+  margin-left: 8px;
+  color: var(--ft-muted, #64748b);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hm-preview ~ .hm-sources-heading {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ft-line, #e3e7ee);
+}
+
+.hm-preview .ft-heading select {
+  max-width: min(100%, 360px);
+}
+
+@container (max-width: 560px) {
+  .hm-settings {
+    gap: 6px 10px;
+  }
+  .hm-settings .ft-sheet-name {
+    flex-basis: 100%;
+  }
+  .hm-settings label:not(.ft-sheet-name) {
+    display: grid;
+  }
+}

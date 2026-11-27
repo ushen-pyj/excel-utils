@@ -1,0 +1,66 @@
+/* Split & Invoice Deduplication refinements aligned with dynamic theme tokens */
+
+.rt-column-list,
+.rt-template {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: end;
+  margin: 10px 0;
+}
+
+.rt-column-list {
+  padding: 11px 13px;
+  border: 1px solid var(--ft-line, #e3e7ee);
+  border-radius: 8px;
+  background: var(--ft-surface-subtle, #f8fafc);
+}
+
+.rt-column-list label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-normal, #1e293b);
+  font-weight: 450;
+}
+
+.rt-column-list input[type="checkbox"] {
+  min-height: 15px;
+  width: 15px;
+  margin: 0;
+}
+
+.rt-source header span,
+.rt-template button {
+  font-size: 12px;
+}
+
+.rt-samples .ft-table-wrap {
+  margin-top: 8px;
+  max-height: 196px;
+}
+
+.rt-section .ft-result {
+  margin-block-start: 18px;
+}
+
+.rt-source label.rt-skip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: var(--text-normal, #1e293b);
+  font-weight: 500;
+}
+
+.rt-skip input[type="checkbox"] {
+  min-height: 15px;
+  width: 15px;
+  margin: 0;
+}
+
+.rt-skip span {
+  color: var(--ft-muted, #64748b);
+  font-weight: 400;
+}
