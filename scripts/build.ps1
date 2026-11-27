@@ -94,3 +94,5 @@ $notice = Get-Content -Raw -Encoding utf8 "$root/packaging/windows/NOTICE.txt"
 $license = Get-Content -Raw -Encoding utf8 "$out/ONLYOFFICE-LICENSE.txt"
 Set-Content -Encoding utf8 "$out/NOTICE.txt" -Value ($notice.TrimEnd() + [Environment]::NewLine * 2 + $license)
 Write-Output "Built $out/ExcelUtils.exe"
+# Robocopy returns nonzero codes for successful copies.
+exit 0

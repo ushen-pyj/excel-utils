@@ -33,11 +33,11 @@ git submodule update --init --depth 1
 
 ## GitHub Releases
 
-在 GitHub 的 **Actions → Windows Release** 手动运行可下载测试安装包。正式发布时，先提交 `VERSION` 中的新版本号及本次改动，将提交推送到主分支，再单独推送同名标签。例如 `VERSION` 为 `0.1.5` 时运行以下命令。
+在 GitHub 的 **Actions → Windows Release** 手动运行可下载测试安装包。正式发布时，先提交 `VERSION` 中的新版本号及本次改动，将提交推送到主分支，再单独推送同名标签。例如 `VERSION` 为 `0.1.6` 时运行以下命令。
 
 ```powershell
-git tag v0.1.5
-git push origin v0.1.5
+git tag v0.1.6
+git push origin v0.1.6
 ```
 
 工作流在 Windows 编译并测试应用，将 `ExcelUtils-Setup-x64.exe` 和 `update.json` 一起上传到 GitHub Release。`VERSION` 同时用于客户端和安装器，每次发布请递增。更新入口读取公开 Release 资产，无需 GitHub 令牌。更新会下载完整的 x64 安装包。[GitHub Release 下载链接说明](https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases)
